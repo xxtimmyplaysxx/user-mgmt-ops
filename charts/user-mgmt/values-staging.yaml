@@ -1,0 +1,25 @@
+images:
+  backend:
+    tag: staging
+  frontend:
+    tag: staging
+
+replicas:
+  backend: 2
+  frontend: 2
+
+config:
+  hibernateDdlAuto: update
+  jwtIssuer: user-mgmt-staging
+  datasourceUrl: jdbc:postgresql://user-mgmt-postgres:5432/usermgmt_staging
+  backendApiUrl: http://user-mgmt-backend:8080
+  postgresDatabase: usermgmt_staging
+
+ingress:
+  host: staging.user-mgmt.example.com
+
+quota:
+  requestsCpu: "1"
+  requestsMemory: 2Gi
+  limitsCpu: "2"
+  limitsMemory: 4Gi

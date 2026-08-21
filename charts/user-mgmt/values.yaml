@@ -1,0 +1,88 @@
+nameOverride: ""
+fullnameOverride: user-mgmt
+
+images:
+  backend:
+    repository: ghcr.io/xxtimmyplaysxx/user-mgmt-backend
+    tag: latest
+    pullPolicy: Always
+  frontend:
+    repository: ghcr.io/xxtimmyplaysxx/user-mgmt-frontend
+    tag: latest
+    pullPolicy: Always
+  postgres:
+    repository: postgres
+    tag: 16-alpine
+    pullPolicy: IfNotPresent
+
+replicas:
+  backend: 2
+  frontend: 2
+  postgres: 1
+
+service:
+  backendPort: 8080
+  frontendPort: 3000
+  postgresPort: 5432
+
+config:
+  postgresDatabase: usermgmt
+  postgresUsername: usermgmt
+  datasourceUrl: jdbc:postgresql://user-mgmt-postgres:5432/usermgmt
+  hibernateDdlAuto: update
+  jwtIssuer: user-mgmt
+  jwtExpirationMillis: "86400000"
+  backendApiUrl: http://user-mgmt-backend:8080
+  publicApiUrl: /api
+
+secret:
+  create: true
+  existingSecret: ""
+  # Classroom demo values only. Use an external secret solution in production.
+  postgresPassword: exam-demo-only-change-me
+  jwtSecret: exam-demo-jwt-secret-change-me-at-least-32-characters
+
+persistence:
+  size: 1Gi
+  storageClass: ""
+
+ingress:
+  enabled: true
+  className: nginx
+  host: user-mgmt.example.com
+  tls:
+    enabled: false
+    secretName: user-mgmt-tls
+
+resources:
+  backend:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { cpu: 500m, memory: 512Mi }
+  frontend:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits: { cpu: 250m, memory: 256Mi }
+  postgres:
+    requests: { cpu: 100m, memory: 128Mi }
+    limits: { cpu: 500m, memory: 512Mi }
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+  scaleDownStabilizationSeconds: 300
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+quota:
+  enabled: true
+  requestsCpu: "2"
+  requestsMemory: 3Gi
+  limitsCpu: "4"
+  limitsMemory: 6Gi
+  pods: "20"
+
+networkPolicy:
+  enabled: true

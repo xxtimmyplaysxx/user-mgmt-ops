@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "user-mgmt.fullname" . }}-config
+  labels:
+    {{- include "user-mgmt.labels" . | nindent 4 }}
+data:
+  POSTGRES_DB: {{ .Values.config.postgresDatabase | quote }}
+  POSTGRES_USER: {{ .Values.config.postgresUsername | quote }}
+  SPRING_DATASOURCE_URL: {{ .Values.config.datasourceUrl | quote }}
+  SPRING_DATASOURCE_USERNAME: {{ .Values.config.postgresUsername | quote }}
+  SPRING_JPA_HIBERNATE_DDL_AUTO: {{ .Values.config.hibernateDdlAuto | quote }}
+  JWT_ISSUER: {{ .Values.config.jwtIssuer | quote }}
+  JWT_EXPIRATION_MILLIS: {{ .Values.config.jwtExpirationMillis | quote }}
+  BACKEND_API_URL: {{ .Values.config.backendApiUrl | quote }}
+  NEXT_PUBLIC_API_URL: {{ .Values.config.publicApiUrl | quote }}

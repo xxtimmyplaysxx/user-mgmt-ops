@@ -1,0 +1,27 @@
+images:
+  backend:
+    tag: production
+  frontend:
+    tag: production
+
+replicas:
+  backend: 2
+  frontend: 2
+
+config:
+  hibernateDdlAuto: update
+  jwtIssuer: user-mgmt-production
+  datasourceUrl: jdbc:postgresql://user-mgmt-postgres:5432/usermgmt_production
+  backendApiUrl: http://user-mgmt-backend:8080
+  postgresDatabase: usermgmt_production
+
+ingress:
+  host: user-mgmt.example.com
+  tls:
+    enabled: true
+
+quota:
+  requestsCpu: "2"
+  requestsMemory: 3Gi
+  limitsCpu: "4"
+  limitsMemory: 6Gi
