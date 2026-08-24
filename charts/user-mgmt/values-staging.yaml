@@ -5,7 +5,7 @@ images:
     tag: 0be26b91ed50c8b950cb329f8e2035d48901e607
 replicas:
   backend: 1
-  frontend: 4
+  frontend: 1
 config:
   hibernateDdlAuto: update
   jwtIssuer: user-mgmt-staging
