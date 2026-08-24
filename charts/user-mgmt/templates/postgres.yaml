@@ -31,6 +31,9 @@ spec:
                 name: {{ include "user-mgmt.fullname" . }}-config
             - secretRef:
                 name: {{ include "user-mgmt.secretName" . }}
+          env:
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
           resources:
             {{- toYaml .Values.resources.postgres | nindent 12 }}
           readinessProbe:
