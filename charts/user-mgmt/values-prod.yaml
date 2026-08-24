@@ -1,8 +1,8 @@
 images:
   backend:
-    tag: 40b4c9934203596db8204fd079307a14bbb0278b
+    tag: 342438b7606a90a48c6d702445d805772156a903
   frontend:
-    tag: 40b4c9934203596db8204fd079307a14bbb0278b
+    tag: 342438b7606a90a48c6d702445d805772156a903
 
 replicas:
   backend: 1
@@ -36,3 +36,4 @@ quota:
 
 networkPolicy:
   enabled: true
+
