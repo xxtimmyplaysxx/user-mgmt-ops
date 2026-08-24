@@ -4,8 +4,8 @@ images:
   frontend:
     tag: 0be26b91ed50c8b950cb329f8e2035d48901e607
 replicas:
-  backend: 2
-  frontend: 2
+  backend: 1
+  frontend: 1
 config:
   hibernateDdlAuto: update
   jwtIssuer: user-mgmt-staging
@@ -13,9 +13,16 @@ config:
   backendApiUrl: http://user-mgmt-backend:8080
   postgresDatabase: usermgmt_staging
 ingress:
-  host: staging.user-mgmt.example.com
+  host: staging-user-mgmt-k8s-nt.duckdns.org
+autoscaling:
+  enabled: false
+podDisruptionBudget:
+  enabled: false
 quota:
+  enabled: false
   requestsCpu: "1"
   requestsMemory: 2Gi
   limitsCpu: "2"
   limitsMemory: 4Gi
+networkPolicy:
+  enabled: false
