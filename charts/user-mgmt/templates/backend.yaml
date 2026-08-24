@@ -38,7 +38,7 @@ spec:
             {{- toYaml .Values.resources.backend | nindent 12 }}
           startupProbe:
             httpGet: { path: /actuator/health/liveness, port: http }
-            failureThreshold: 30
+            failureThreshold: 60
             periodSeconds: 5
           livenessProbe:
             httpGet: { path: /actuator/health/liveness, port: http }
