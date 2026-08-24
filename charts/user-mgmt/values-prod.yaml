@@ -1,12 +1,12 @@
 images:
   backend:
-    tag: 3269b68ba12075d575781fc060987072c12a28ed
+    tag: 40b4c9934203596db8204fd079307a14bbb0278b
   frontend:
-    tag: 3269b68ba12075d575781fc060987072c12a28ed
+    tag: 40b4c9934203596db8204fd079307a14bbb0278b
 
 replicas:
-  backend: 2
-  frontend: 2
+  backend: 1
+  frontend: 1
 
 config:
   hibernateDdlAuto: update
@@ -16,12 +16,23 @@ config:
   postgresDatabase: usermgmt_production
 
 ingress:
-  host: user-mgmt.example.com
+  host: prod-user-mgmt-k8s-nt.duckdns.org
   tls:
-    enabled: true
+    enabled: false
+
+autoscaling:
+  enabled: false
+
+podDisruptionBudget:
+  enabled: false
 
 quota:
-  requestsCpu: "2"
-  requestsMemory: 3Gi
-  limitsCpu: "4"
-  limitsMemory: 6Gi
+  enabled: true
+  requestsCpu: "1"
+  requestsMemory: 2Gi
+  limitsCpu: "2"
+  limitsMemory: 3Gi
+  pods: "10"
+
+networkPolicy:
+  enabled: true
