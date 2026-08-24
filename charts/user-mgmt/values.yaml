@@ -36,11 +36,11 @@ config:
   publicApiUrl: /api
 
 secret:
-  create: true
-  existingSecret: ""
-  # Classroom demo values only. Use an external secret solution in production.
-  postgresPassword: exam-demo-only-change-me
-  jwtSecret: exam-demo-jwt-secret-change-me-at-least-32-characters
+  # Real credentials are created separately in Kubernetes and never committed to Git.
+  create: false
+  existingSecret: user-mgmt-secret
+  postgresPassword: ""
+  jwtSecret: ""
 
 persistence:
   size: 1Gi
