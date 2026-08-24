@@ -1,8 +1,8 @@
 images:
   backend:
-    tag: 342438b7606a90a48c6d702445d805772156a903
+    tag: 342438b0b787c8d3abd90a40f73aca53499324e4
   frontend:
-    tag: 342438b7606a90a48c6d702445d805772156a903
+    tag: 342438b0b787c8d3abd90a40f73aca53499324e4
 
 replicas:
   backend: 1
