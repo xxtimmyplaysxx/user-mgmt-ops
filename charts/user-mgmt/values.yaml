@@ -4,11 +4,11 @@ fullnameOverride: user-mgmt
 images:
   backend:
     repository: ghcr.io/xxtimmyplaysxx/user-mgmt-backend
-    tag: latest
+    tag: 3269b68ba12075d575781fc060987072c12a28ed
     pullPolicy: Always
   frontend:
     repository: ghcr.io/xxtimmyplaysxx/user-mgmt-frontend
-    tag: latest
+    tag: 3269b68ba12075d575781fc060987072c12a28ed
     pullPolicy: Always
   postgres:
     repository: postgres
@@ -49,7 +49,7 @@ persistence:
 ingress:
   enabled: true
   className: nginx
-  host: user-mgmt.example.com
+  host: user-mgmt-k8s-nt.duckdns.org
   tls:
     enabled: false
     secretName: user-mgmt-tls
