@@ -15,9 +15,14 @@ config:
 ingress:
   host: staging-user-mgmt-k8s-nt.duckdns.org
 autoscaling:
-  enabled: false
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 2
+  targetCPUUtilizationPercentage: 20
+  scaleDownStabilizationSeconds: 60
 podDisruptionBudget:
-  enabled: false
+  enabled: true
+  minAvailable: 1
 quota:
   enabled: false
   requestsCpu: "1"
