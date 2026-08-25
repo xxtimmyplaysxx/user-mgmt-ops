@@ -24,10 +24,10 @@ podDisruptionBudget:
   enabled: true
   minAvailable: 1
 quota:
-  enabled: false
+  enabled: true
   requestsCpu: "1"
   requestsMemory: 2Gi
   limitsCpu: "2"
   limitsMemory: 4Gi
 networkPolicy:
-  enabled: false
+  enabled: true
