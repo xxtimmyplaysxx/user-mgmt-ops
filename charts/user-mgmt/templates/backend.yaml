@@ -6,7 +6,9 @@ metadata:
     {{- include "user-mgmt.labels" . | nindent 4 }}
     app.kubernetes.io/component: backend
 spec:
+  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicas.backend }}
+  {{- end }}
   strategy:
     type: RollingUpdate
     rollingUpdate:
