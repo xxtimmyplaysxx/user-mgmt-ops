@@ -73,6 +73,12 @@ Geprueft am 27.09.2026 um 15:13 Uhr (Europe/Zurich):
 - Bestehende Argo-CD-Anwendungen weiterhin Synced/Healthy.
 - Details und CRD-Timeout-Behebung: monitoring-installation.md.
 
+Nachtrag um 15:19 Uhr: Grafana wurde beim ersten Browserzugriff mit dem alten
+256Mi-Limit OOMKilled. Helm-Revision 2 erhoeht den Request auf 512Mi und das Limit
+auf 768Mi. Drei parallele Abrufserien der Login-Dateien erfolgreich, neuer Pod
+3/3 Ready ohne Restarts, gemessener Verbrauch 428Mi. Dashboards erneut geprueft.
+Details und Testumfang in monitoring-installation.md.
+
 Erfolgreich lokal ausgefuehrt:
 - Java Gradle-Tests fuer Module-Client und Controller.
 - Python pytest: 3 Tests erfolgreich (SQLite, nicht Managed MySQL).

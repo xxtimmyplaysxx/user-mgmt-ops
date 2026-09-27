@@ -68,3 +68,34 @@ Die neuen Anwendungs-Images und deren ServiceMonitors sind noch nicht ausgerollt
 Daher belegt dieser Nachweis Infrastruktur-Messwerte und Dashboard-Provisionierung,
 noch keine User-/Module-RED-Messwerte. Ein ausgeloester und zugestellter Testalarm,
 Lasttest und HPA-Skalierung muessen separat nachgewiesen werden.
+
+## Grafana-Speicherlimit korrigiert (15:19 Uhr)
+
+Beim ersten Browserzugriff brach der Port-Forward um 15:16 Uhr ab. Der
+Grafana-Container meldete fuer 15:16:05 Uhr `OOMKilled`, Exitcode 137. Das
+urspruengliche Speicherlimit von 256Mi war zu niedrig. Der Browser konnte dadurch
+nicht alle Anwendungsdateien laden. Die vorherige Ready-/Health-Pruefung allein
+hatte diesen Fehler nicht aufgedeckt.
+
+monitoring/values.yaml reserviert jetzt 512Mi RAM und begrenzt Grafana auf 768Mi;
+CPU-Request 100m, CPU-Limit 500m. Die Aenderung wurde mit Helm ausgerollt:
+Revision 2, deployed, Upgrade complete. Kein zusaetzlicher Worker wurde angelegt.
+Zur Einordnung nennt die [Grafana-Installationsdokumentation](https://grafana.com/docs/grafana/latest/setup-grafana/installation/)
+512 MB als minimal empfohlenen Arbeitsspeicher fuer Grafana.
+
+Verifikation ueber einen temporaeren lokalen Port-Forward auf Port 13000:
+
+- Drei Abrufe der Login-Seite: jeweils HTTP 200.
+- Je Abruf alle sieben eingebundenen JS-/CSS-Dateien mit sechs parallelen
+  Verbindungen heruntergeladen: jeweils HTTP 200 und korrekter Content-Type.
+  Pro Durchlauf 10.555.529 Bytes; kein abgebrochener Download.
+- /api/health anschliessend weiterhin database=ok.
+- Neuer Grafana-Pod 3/3 Ready, null Restarts nach dem Test.
+- Gemessener Grafana-Verbrauch nach dem Test: 428Mi, unter dem neuen 768Mi-Limit.
+- Alle drei VSC-Dashboards nach dem Rollout erneut ueber die Grafana-API gefunden.
+- Staging und Production weiterhin Synced/Healthy.
+
+Der Test-Port-Forward wurde anschliessend beendet. Der Benutzer startet seinen
+Port-Forward auf Port 3000 neu und laedt die Browserseite mit Strg+F5 erneut.
+Das Ergebnis belegt diese Abrufe; langfristiger Verbrauch unter Last wird bei den
+weiteren Tests beobachtet.
