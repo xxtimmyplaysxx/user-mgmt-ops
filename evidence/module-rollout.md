@@ -32,3 +32,29 @@ kubectl --context do-fra1-vsc-orchestrierung get --raw '/api/v1/namespaces/monit
 ```
 
 Ein frischer Live-E2E-Lauf mit dem korrigierten Image ist noch erforderlich.
+
+## Wiederholung mit korrigiertem Image erfolgreich
+
+Am 27.09.2026 um 16:12 Uhr (Europe/Zurich) wurde der Test nach erneutem Rollout
+wiederholt. Application-PR 3 ist gemergt, Main-Commit
+`fd1e6343585fdf92ba437e929d23cabe1f894133`. Der Main-Run
+[36324599795](https://github.com/xxtimmyplaysxx/user-mgmt-service-kubernetes/actions/runs/36324599795)
+hat Tests, drei Image-Publikationen und die Ops-Promotion erfolgreich abgeschlossen.
+Ops-Revision `db1a9adc342bc7b5c88b31f5087c43624b4a921b` wurde synchronisiert.
+
+```text
+PASS assignment: HTTP 204
+PASS idempotent repeat: HTTP 204
+PASS missing module: HTTP 404
+PASS invalid module ID: HTTP 400
+PASS unauthenticated: HTTP 403
+PASS another user's assignment: HTTP 403
+```
+
+Auch Registrierung und Anmeldung zweier neuer Testbenutzer wurden vom Skript
+erfolgreich geprueft. Alle sechs anschliessenden HTTP-Testfaelle bestanden.
+Der falsche Fehlerstatus ist damit auch im echten Cluster behoben. Die fruehere
+fehlgeschlagene Messung bleibt oben als Fehlernachweis erhalten.
+
+Offen bleiben Ausfall-/Lasttests, Alarmzustellung, Policies und die endgueltige
+PostgreSQL-Migration. Nach der Umschaltung ist dieser E2E-Test nochmals erforderlich.

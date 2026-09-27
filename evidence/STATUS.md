@@ -85,6 +85,9 @@ Aktualisierung 15:55 Uhr: Ops PR 1 ist gemergt; alle vier Staging-Deployments si
 Ready. Module-Service mit Managed MySQL/TLS 1.3 sowie beide Anwendungs-Scrape-Targets
 sind verifiziert. Live-E2E hat bei einem fehlenden Modul einen falschen HTTP-Status
 aufgedeckt (403 statt 404); Korrektur und Wiederholung stehen aus.
+Nachtrag 16:12 Uhr: Application-PR 3 und Main-Pipeline erfolgreich; der komplette
+Live-E2E-Test mit Image `fd1e6343585fdf92ba437e929d23cabe1f894133` besteht jetzt
+alle sechs HTTP-Testfaelle nach erfolgreicher Registrierung/Anmeldung.
 Details: [Module-Rollout](module-rollout.md). Die folgende Chronologie beschreibt
 auch fruehere Zwischenstaende.
 
@@ -131,8 +134,9 @@ Ausstehend (NICHT als bestanden behauptet):
   Request-Counter und Duration-Histogramme sind inzwischen nachgewiesen.
 - k6-Lauf, HPA scale-out/scale-in und Verfuegbarkeit.
 - Kyverno-Admission-Ablehnung.
-- Vollstaendiger Live-E2E-Lauf nach HTTP-Fehlerstatus-Korrektur und Ausfalltests.
-  TLS zu Managed MySQL und der GitOps-Rollout sind nachgewiesen.
+- Live-Ausfalltests und erneuter E2E-Lauf nach PostgreSQL-Umschaltung.
+  Fehlerstatus-Korrektur, kompletter Live-E2E, TLS zu Managed MySQL und der
+  GitOps-Rollout sind nachgewiesen.
 
 Nachweise mit Uhrzeit und Commit-SHA ergaenzen. Keine Tokens, Passwoerter,
 JWTs, State-Dateien oder Datenbankinhalte in diese Dokumentation kopieren.

@@ -14,7 +14,13 @@ Tabellen/Sequenzen stimmen beim Datenvergleich ueberein. Beide DB-Secrets sind
 im Staging-Namespace vorhanden. Die Anwendung nutzt weiterhin die alte PostgreSQL;
 ihre endgueltige Umschaltung steht aus. Module-Service und Anwendungsmetriken sind
 ausgerollt: beide Scrape-Targets up, MySQL TLS 1.3 mit Zertifikatspruefung. Der erste
-Live-E2E-Lauf fand einen HTTP-Fehlerstatus-Bug; siehe [Rollout-Nachweis](evidence/module-rollout.md).
+Live-E2E-Lauf fand einen HTTP-Fehlerstatus-Bug. Dieser ist mit Application-PR 3
+behoben; die Wiederholung besteht alle sechs HTTP-Testfaelle nach erfolgreicher
+Registrierung/Anmeldung. Siehe [Rollout-Nachweis](evidence/module-rollout.md).
+
+**Dieser Branch aktiviert voruebergehend Staging-Wartung**: Backend 0, HPA aus.
+Nach dem Merge ist die Staging-API bis zum separaten Managed-PG-Cutover nicht
+verfuegbar. Ablauf und Rueckweg: [Cutover-Anleitung](evidence/postgres-cutover-runbook.md).
 
 Die Anwendung einschliesslich des vom Lehrer bereitgestellten Module Service liegt
 in https://github.com/xxtimmyplaysxx/user-mgmt-service-kubernetes auf `main`.
@@ -29,7 +35,7 @@ abschliessenden Datenabgleich und die kontrollierte Umschaltung erhalten.
 | 3 IaC | Provider, generierte/bereinigte Konfiguration, Variablen, Import und No-change-Plan erfolgreich | Erledigt; State lokal erhalten |
 | 4 Managed PostgreSQL | Managed DB/Firewall/Secret erstellt, Backup wiederhergestellt, TLS und Datenvergleich erfolgreich | Schreibzugriffe stoppen, finalen Datenstand uebernehmen, umstellen, alte DB/PVC entfernen |
 | 5 Kyverno | Helm-values, 3 Enforce-Policies, ungueltiges Deployment | Installation und dokumentierte Admission-Ablehnung |
-| 6 Microservices | REST-Client mit Resilienz, CI/GitOps-Rollout, Metriken und Managed MySQL/TLS live, Modulzuweisung erfolgreich | HTTP-Fehlerstatus-Korrektur ausrollen, vollstaendiger E2E inkl. Ausfallfaellen und Laststabilitaet |
+| 6 Microservices | REST-Client mit Resilienz, CI/GitOps-Rollout, Metriken und Managed MySQL/TLS live, alle sechs Live-E2E-Faelle bestanden | Ausfallfaelle und Laststabilitaet, E2E nach PostgreSQL-Umschaltung wiederholen |
 
 ## Vorhandene Umgebung
 
@@ -94,10 +100,12 @@ leeres public-Schema wieder her und entfernt anschliessend Pod und Netzwerkregel
 Ein Fehler beim Restore rollt die gesamte Transaktion zurueck.
 Quelle: [PostgreSQL pg_restore](https://www.postgresql.org/docs/16/app-pgrestore.html).
 
-**Nicht nochmals auf das bereits befuellte Ziel anwenden.** Vor der endgueltigen
-Umschaltung muessen Schreibzugriffe auf die Quelle angehalten und ein frisches
-Backup mit erneutem Datenvergleich verwendet werden. Der heutige Vergleich belegt
-den Stand zum Testzeitpunkt, nicht die Synchronisation spaeterer Aenderungen.
+**Den Standard-Restore nicht nochmals auf das bereits befuellte Ziel anwenden.**
+Fuer die endgueltige Umschaltung zuerst die Staging-Wartung per GitOps aktivieren,
+dann `scripts/Sync-StagingPostgres.ps1` ausfuehren. Der neue Ablauf sichert Quelle
+und bisherigen Zielstand, prueft Wartung/fehlende Clients, ersetzt den unbenutzten
+Teststand transaktional und vergleicht Quelle/Ziel erneut. Siehe Cutover-Anleitung.
+Ein frueherer Vergleich belegt nur den Stand zu seinem Testzeitpunkt.
 Lokale Reports und Backups liegen unter dem ignorierten Verzeichnis tmp/.
 
 `managedDatabase.enabled=true` laedt `user-mgmt-managed-postgres` nach dem bisherigen

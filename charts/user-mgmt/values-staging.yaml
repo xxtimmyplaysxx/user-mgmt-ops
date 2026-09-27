@@ -4,7 +4,8 @@ images:
   frontend:
     tag: fd1e6343585fdf92ba437e929d23cabe1f894133
 replicas:
-  backend: 1
+  # Temporary migration maintenance; resume only after final data verification.
+  backend: 0
   frontend: 1
 config:
   hibernateDdlAuto: update
@@ -15,7 +16,7 @@ config:
 ingress:
   host: staging-user-mgmt-k8s-nt.duckdns.org
 autoscaling:
-  enabled: true
+  enabled: false
   minReplicas: 1
   maxReplicas: 2
   targetCPUUtilizationPercentage: 20

@@ -1,6 +1,7 @@
 param(
     [string]$Context = 'do-fra1-vsc-orchestrierung',
-    [string]$Namespace = 'user-mgmt-staging'
+    [string]$Namespace = 'user-mgmt-staging',
+    [switch]$PassThru
 )
 
 $ErrorActionPreference = 'Stop'
@@ -11,6 +12,7 @@ $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 $backupName = "$Namespace-$stamp.dump"
 $localBackup = Join-Path $backupDir $backupName
 $remoteBackup = "/tmp/$backupName"
+if (Test-Path -LiteralPath $localBackup) { throw 'Backup filename already exists; refusing to overwrite it.' }
 
 $podList = kubectl --context $Context -n $Namespace get pods -l app.kubernetes.io/component=postgres -o json | ConvertFrom-Json
 if ($LASTEXITCODE -ne 0) { throw 'Could not list source database pods.' }
@@ -53,5 +55,9 @@ $metadata = [ordered]@{
     restore_tested = $false
 }
 $metadata | ConvertTo-Json | Set-Content -LiteralPath "$localBackup.metadata.json" -Encoding utf8
-Write-Output "Backup verified (archive readable, SHA256 matches): $localBackup"
-Write-Output "Size: $($metadata.bytes) bytes. Restore test is the next migration step."
+if ($PassThru) {
+    [pscustomobject]$metadata
+} else {
+    Write-Output "Backup verified (archive readable, SHA256 matches): $localBackup"
+    Write-Output "Size: $($metadata.bytes) bytes. Restore test is the next migration step."
+}
