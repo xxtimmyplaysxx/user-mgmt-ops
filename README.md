@@ -21,7 +21,7 @@ Die Abgabe besteht aus zwei Repositories:
 | 5 Kyverno | Drei Enforce-Policies und zwoelf Live-Gegenproben bestanden | [Admission](evidence/kyverno-admission.md) |
 | 6 Microservices | REST-Zuweisung, Managed MySQL/TLS, CI/GitOps, Metriken, sechs E2E-Faelle und kontrollierter Netzwerkausfall mit Erholung | [Rollout](evidence/module-rollout.md), [Resilienz](evidence/module-resilience.md) |
 
-[Chronologie](evidence/STATUS.md) und [deutscher Lernzettel fuer die muendliche Pruefung](PRUEFUNGSVORBEREITUNG.md).
+[Chronologie und Nachweisstatus](evidence/STATUS.md).
 Die frueheren Fehler sind nachvollziehbar dokumentiert: [erster Lasttest](evidence/loadtest-first-run.md)
 und [fehlende Planerstatistiken nach Restore](evidence/module-resilience.md).
 Die Nachweise gelten fuer das angegebene Testprofil und die angegebenen Images;

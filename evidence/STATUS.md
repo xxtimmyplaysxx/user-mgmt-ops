@@ -187,12 +187,8 @@ Lesend am bestehenden Cluster festgestellt:
   inzwischen zwei Ready-Nodes, siehe oben.
 - Zu Beginn noch keine Managed-Datenbanken vorhanden; Erstellung siehe oben.
 
-Verbleibende persoenliche Vorbereitung:
-- Optionale visuelle Grafana-Demo in der angemeldeten Browser-Sitzung. Drei
-  provisionierte Dashboards, alle zehn Abfragen, echte RED-Metriken und beide
-  Alarmzustaende sind technisch nachgewiesen.
-- Muendliche Erklaerung der Architektur, Messwerte und gefundenen Fehler.
-  [Lernzettel](../PRUEFUNGSVORBEREITUNG.md).
+Umfang des Monitoring-Nachweises: Drei provisionierte Dashboards, alle zehn
+Abfragen, echte RED-Metriken und beide Alarmzustaende sind technisch nachgewiesen.
 
 17:46-17:47 Uhr: Der Live-Ausfalltest des Module-Service ist bestanden. Netzwerkregel
 und Argo-Auto-Sync wurden auf den Ausgangswert zurueckgestellt. Kompletter E2E nach

@@ -96,5 +96,4 @@ die Messungen faelschlich ausblenden. Diese Eigenschaft ist bewusst dokumentiert
 
 Die technische Dashboard-Pruefung erfolgte ueber APIs und echte Abfragen; das
 obige Diagramm ist kein Grafana-Screenshot. Die getrennte Browser-Sitzung hatte
-keine Grafana-Anmeldung. Die bestehende angemeldete Sitzung des Eigentuemers kann
-fuer die muendliche Demonstration verwendet werden.
+keine Grafana-Anmeldung.
