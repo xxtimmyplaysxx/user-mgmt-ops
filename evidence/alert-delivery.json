@@ -1,0 +1,22 @@
+{
+  "source": "Selected fields from alert-receiver logs",
+  "timestamp_timezone": "UTC",
+  "notifications": [
+    {
+      "received_at": "2026-09-27T14:18:42.065322183Z",
+      "notification_status": "firing",
+      "alert_status": "firing",
+      "alert": "UserMgmtUnavailable",
+      "namespace": "user-mgmt-staging",
+      "deployment": "user-mgmt-backend",
+      "starts_at": "2026-09-27T14:18:32.039Z",
+      "summary": "Keine verfuegbare User-Service-Replica"
+    },
+    {
+      "received_at": "2026-09-27T14:25:42.108466855Z",
+      "status": "resolved",
+      "starts_at": "2026-09-27T14:18:32.039Z",
+      "ends_at": "2026-09-27T14:25:17.039Z"
+    }
+  ]
+}

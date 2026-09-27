@@ -1,0 +1,16 @@
+started_at_utc: 2026-09-27T17:19:41.7465036Z
+context: do-fra1-vsc-orchestrierung
+
+PASS valid deployment: admitted in server dry-run
+PASS app container missing/invalid resources: rejected by vsc-require-resources
+PASS init container missing/invalid resources: rejected by vsc-require-resources
+PASS app container missing/invalid securityContext: rejected by vsc-require-nonroot
+PASS init container missing/invalid securityContext: rejected by vsc-require-nonroot
+PASS app container missing/invalid image: rejected by vsc-require-versioned-images
+PASS init container missing/invalid image: rejected by vsc-require-versioned-images
+PASS container override runAsNonRoot=False: rejected by vsc-require-nonroot
+PASS container override runAsUser=0: rejected by vsc-require-nonroot
+PASS container override privileged=True: rejected by vsc-require-nonroot
+PASS valid init container: admitted in server dry-run
+PASS unlabelled production namespace outside course-policy scope: admitted in server dry-run
+All checks used server dry-run; no Deployment or Pod was created.
