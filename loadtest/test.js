@@ -14,6 +14,8 @@ export const options = {
     http_req_failed: ['rate<0.01'],
     business_success: ['rate>0.99'],
     http_req_duration: ['p(95)<3000'],
+    // Fast connection failures must not make successful-request latency look good.
+    'http_req_duration{expected_response:true}': ['p(95)<3000'],
   },
 };
 

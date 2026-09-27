@@ -23,6 +23,11 @@ spec:
                 resources:
                   requests: { cpu: '?*', memory: '?*' }
                   limits: { cpu: '?*', memory: '?*' }
+            =(initContainers):
+              - name: '*'
+                resources:
+                  requests: { cpu: '?*', memory: '?*' }
+                  limits: { cpu: '?*', memory: '?*' }
 ---
 apiVersion: kyverno.io/v1
 kind: ClusterPolicy
@@ -45,10 +50,21 @@ spec:
           spec:
             securityContext:
               runAsNonRoot: true
+              =(runAsUser): '>0'
             containers:
               - name: '*'
                 securityContext:
                   allowPrivilegeEscalation: false
+                  =(runAsNonRoot): true
+                  =(runAsUser): '>0'
+                  =(privileged): false
+            =(initContainers):
+              - name: '*'
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  =(runAsNonRoot): true
+                  =(runAsUser): '>0'
+                  =(privileged): false
 ---
 apiVersion: kyverno.io/v1
 kind: ClusterPolicy
@@ -70,5 +86,8 @@ spec:
         pattern:
           spec:
             containers:
+              - name: '*'
+                image: '*:* & !*:latest'
+            =(initContainers):
               - name: '*'
                 image: '*:* & !*:latest'

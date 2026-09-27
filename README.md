@@ -18,11 +18,15 @@ Live-E2E-Lauf fand einen HTTP-Fehlerstatus-Bug. Dieser ist mit Application-PR 3
 behoben; die Wiederholung besteht alle sechs HTTP-Testfaelle nach erfolgreicher
 Registrierung/Anmeldung. Siehe [Rollout-Nachweis](evidence/module-rollout.md).
 
-**Dieser Branch entfernt die nicht mehr verwendete Staging-PostgreSQL samt PVC.**
-Die Anwendung ist erfolgreich auf Managed PostgreSQL umgeschaltet; auch der
-anschliessende Live-E2E besteht alle sechs Faelle. Die lokale Quell-Sicherung
-ist verifiziert. Der alte PV hat die ReclaimPolicy Delete und wird bei diesem
-Schritt ebenfalls freigegeben. Production bleibt in ihrer bestehenden Konfiguration.
+**Die Staging-PostgreSQL-Migration ist abgeschlossen.** Die Anwendung verwendet
+Managed PostgreSQL; auch der anschliessende Live-E2E besteht alle sechs Faelle.
+Alte Staging-DB, Service, Netzwerkregel, PVC, PV und Cloud-Volume sind entfernt.
+Die lokale Quell-Sicherung ist verifiziert. Production bleibt in ihrer bestehenden
+Konfiguration. Kyverno ist installiert; drei Enforce-Policies und zwoelf
+Admission-Pruefungen sind [live nachgewiesen](evidence/kyverno-admission.md).
+Der erste Lasttest ist [fehlgeschlagen und ausgewertet](evidence/loadtest-first-run.md):
+Java-Heapmangel bei parallelen Passwortpruefungen, anschliessend Probe-Neustarts.
+Eine Korrektur fuer Staging ist vorbereitet; Rollout und Wiederholung stehen aus.
 [Nachweis](evidence/postgres-final-copy.md),
 [Ablauf und Rueckweg](evidence/postgres-cutover-runbook.md).
 
@@ -35,10 +39,10 @@ privaten Verbindungen erreichbar; ihre Zugangsdaten kommen aus Secrets.
 | Aufgabe | Vorbereitet | Noch praktisch nachzuweisen |
 |---|---|---|
 | 1 Observability | Stack, CPU/RAM-/HTTP-Metriken, 3 Dashboards; echter Alarm und Entwarnung beim Webhook empfangen | RED-Dashboards pruefen |
-| 2 Lasttest | k6-Skript, Job und Netzwerkregeln | Testlauf, HPA scale-out und scale-in, Verfuegbarkeit und Diagramme |
+| 2 Lasttest | Erster Lauf dokumentiert: 24.20% erfolgreiche Logins; Heap-/CPU-Korrektur vorbereitet | Korrektur ausrollen, bestandener Wiederholungslauf, HPA scale-out/scale-in und Diagramme |
 | 3 IaC | Provider, generierte/bereinigte Konfiguration, Variablen, Import und No-change-Plan erfolgreich | Erledigt; State lokal erhalten |
-| 4 Managed PostgreSQL | Frische Datenkopie, Datenvergleich, Umschaltung, echte JDBC-TLS-Verbindungen und E2E erfolgreich | Alte DB/PVC nach diesem Merge tatsaechlich entfernt nachweisen |
-| 5 Kyverno | Helm-values, 3 Enforce-Policies, ungueltiges Deployment | Installation und dokumentierte Admission-Ablehnung |
+| 4 Managed PostgreSQL | Datenkopie, Vergleich, Umschaltung, JDBC-TLS/E2E und Entfernung von Quell-DB/PVC/Cloud-Volume nachgewiesen | Erledigt fuer Staging |
+| 5 Kyverno | Installation, 3 Enforce-Policies, Ablehnung und 12 Live-Gegenproben | Erledigt fuer Staging |
 | 6 Microservices | REST-Client mit Resilienz, CI/GitOps-Rollout, Metriken und Managed MySQL/TLS live, alle sechs Live-E2E-Faelle auch nach PostgreSQL-Umschaltung bestanden | Ausfallfaelle und Laststabilitaet |
 
 ## Vorhandene Umgebung
@@ -139,34 +143,48 @@ abwaertskompatibel (postgres an, neue Funktionen aus).
 
 ```powershell
 helm repo add kyverno https://kyverno.github.io/kyverno/
-helm upgrade --install kyverno kyverno/kyverno --version 3.9.1 -n policy --create-namespace -f policy/values.yaml --wait --timeout 10m
-kubectl apply -f policy/policies.yaml
-kubectl label namespace user-mgmt-staging vsc-policies=enforce --overwrite
-kubectl apply --dry-run=server -f policy/invalid-deployment.yaml
+helm upgrade --install kyverno kyverno/kyverno --version 3.9.1 --kube-context do-fra1-vsc-orchestrierung -n policy --create-namespace -f policy/values.yaml --wait --timeout 10m
+kubectl --context do-fra1-vsc-orchestrierung apply -f policy/policies.yaml
+kubectl --context do-fra1-vsc-orchestrierung label namespace user-mgmt-staging vsc-policies=enforce --overwrite
+kubectl --context do-fra1-vsc-orchestrierung apply --dry-run=server -f policy/invalid-deployment.yaml
 ```
 
 Die letzte Zeile MUSS abgelehnt werden. Drei Policies verlangen Requests/Limits,
 Non-root ohne Privilege Escalation und explizite Image-Tags statt latest.
 Kyverno erzeugt Controller-Regeln aus den Pod-Regeln. Die Namespace-Selektion
 verhindert, dass die Kursregeln Systemkomponenten oder alte Umgebungen blockieren.
+Init-Container werden ebenfalls geprueft. Container duerfen den Non-root-Kontext
+nicht durch Root-Overrides oder privileged=true umgehen. Reproduzierbare
+Server-Dry-Run-Pruefungen: `python scripts/verify-policies.py`.
+Installationswarnungen und Hintergrundberichte sind im
+[Live-Nachweis](evidence/kyverno-admission.md) erklaert.
 
 ## Lasttest und Nachweise
 
-Erst einen separaten Testbenutzer registrieren. Seine Zugangsdaten als
-`loadtest-credentials` mit `TEST_EMAIL` und `TEST_PASSWORD` anlegen.
+Das Vorbereitungsskript registriert einen separaten synthetischen Testbenutzer,
+prueft dessen Login und legt `loadtest-credentials` sowie die Test-ConfigMap an.
+Es nutzt Python im bestehenden Grafana-Sidecar fuer den internen API-Zugriff;
+Zugangsdaten bleiben im Speicher bzw. Secret. Es startet noch keine Last.
+Am 27.09. wurde diese Vorbereitung erfolgreich ausgefuehrt.
 
 ```powershell
-kubectl -n user-mgmt-staging create configmap user-mgmt-loadtest --from-file=test.js=loadtest/test.js --dry-run=client -o yaml | kubectl apply -f -
-kubectl apply -f loadtest/job.yaml
-kubectl -n user-mgmt-staging logs -f job/user-mgmt-loadtest
-kubectl -n user-mgmt-staging get hpa,pods -w
+.\scripts\Prepare-StagingLoadTest.ps1
+kubectl --context do-fra1-vsc-orchestrierung apply -f loadtest/job.yaml
+kubectl --context do-fra1-vsc-orchestrierung -n user-mgmt-staging logs -f job/user-mgmt-loadtest --pod-running-timeout=120s
+# In einem zweiten Terminal die Skalierung beobachten:
+kubectl --context do-fra1-vsc-orchestrierung -n user-mgmt-staging get hpa -w
 ```
 
 Das Skript lastet den Login als echten API-Endpunkt aus: 2 -> 10 -> 20 -> 0 VUs.
 Es prueft erfolgreiche Logins, <1% HTTP-Fehler und P95 <3 Sekunden.
+Auch erfolgreiche HTTP-Antworten allein muessen P95 <3 Sekunden erreichen;
+schnelle Verbindungsfehler sollen die Latenzbewertung nicht verdecken.
 HPA-Ausgangswert, Maximum und Rueckgang zeitgestempelt festhalten, ebenso k6-Ergebnis
 und Grafana-Zeitraum. Lasthoehe nur anhand der Beobachtung anpassen. Ein vorhandenes
 Skript allein belegt noch keine erfolgreiche Skalierung.
+Der Job hat keine automatischen Wiederholungen und endet spaetestens nach acht
+Minuten. Vor einer Wiederholung zuerst Ergebnis/Logs sichern und den beendeten
+Job gezielt entfernen; das Vorbereitungsskript ueberschreibt keinen bestehenden Job.
 
 ## Lokale Validierung
 

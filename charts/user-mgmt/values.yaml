@@ -84,6 +84,20 @@ resources:
     requests: { cpu: 100m, memory: 128Mi }
     limits: { cpu: 500m, memory: 512Mi }
 
+# Environment-specific runtime tuning; defaults preserve existing deployments.
+backendEnv: {}
+backendProbes:
+  startup:
+    httpGet: { path: /actuator/health/liveness, port: http }
+    failureThreshold: 60
+    periodSeconds: 5
+  liveness:
+    httpGet: { path: /actuator/health/liveness, port: http }
+    periodSeconds: 10
+  readiness:
+    httpGet: { path: /actuator/health/readiness, port: http }
+    periodSeconds: 5
+
 autoscaling:
   enabled: true
   minReplicas: 2

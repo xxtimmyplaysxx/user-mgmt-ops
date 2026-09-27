@@ -71,3 +71,21 @@ Die Entfernung wird separat ueber `postgres.enabled=false` vorgenommen. Sie
 entfernt altes Deployment, Service, NetworkPolicy und PVC; die ReclaimPolicy gibt
 danach auch das alte Block-Volume frei. Die tatsaechliche Entfernung steht vor
 diesem separaten Merge noch aus. Managed PostgreSQL und die Backups bleiben bestehen.
+
+## Quelle und altes Volume entfernt
+
+Ops PR 4 wurde als `0ff90044fe42664403bfa0ae8248cbd34de5fa34` gemergt und von
+Argo CD synchronisiert. Am 27.09.2026 um 16:33 Uhr (Europe/Zurich) geprueft:
+
+- Altes Staging-PostgreSQL-Deployment, Service, NetworkPolicy und PVC entfernt.
+- Der vorher an `user-mgmt-staging/user-mgmt-postgres-data` gebundene PV
+  `pvc-15e25f3b-29a6-45ac-9b37-40134a5a53ab` ist ebenfalls entfernt.
+- Die DigitalOcean-API antwortet fuer die vorab gespeicherte exakte Volume-ID
+  mit HTTP 404; auch das alte Cloud-Block-Volume ist somit entfernt.
+- Staging hat nur noch Backend, Frontend und Module-Service; alle Deployments Ready.
+- HPA vorhanden, beide Argo-CD-Anwendungen Synced/Healthy.
+- Production-PostgreSQL weiterhin 1/1 Ready; die getrennte Production wurde nicht migriert.
+
+Damit ist der Staging-Migrationsablauf einschliesslich Quell-DB/PVC-Entfernung
+abgeschlossen. Der finale Quell-Dump und der gesicherte alte Zielstand bleiben
+lokal unter dem ignorierten `tmp/backups/` erhalten.

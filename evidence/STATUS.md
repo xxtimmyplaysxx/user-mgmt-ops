@@ -17,6 +17,24 @@ erneut erfolgreich. Beide Anwendungen Synced/Healthy, Anwendungs-Targets up.
 Entwarnung bereits um 16:25:42 beim Webhook empfangen. Quelle ohne App-Verbindungen;
 Entfernung der alten Staging-DB/PVC ist als separater Schritt vorbereitet.
 
+16:33 Uhr: Ops PR 4 synchronisiert. Alte Staging-DB, Service, NetworkPolicy, PVC
+und PV sind entfernt. DigitalOcean bestaetigt die Entfernung der vorab exakt
+identifizierten Volume-ID mit HTTP 404. Staging-Deployments Ready, beide Argo-CD-
+Anwendungen Healthy. Aufgabe 4 fuer Staging abgeschlossen; Details im Migrationsnachweis.
+
+16:35-16:47 Uhr: Kyverno installiert, vier Controller Ready, drei Enforce-Policies
+fuer Staging aktiv. Ungueltiges Deployment durch alle drei Policies abgelehnt;
+zwoelf Admission-Gegenproben bestanden, ebenso die drei aktuellen Helm-Deployments.
+Aufgabe 5 nachgewiesen: [Kyverno-Admission](kyverno-admission.md).
+Lasttest-Benutzer/Secret und ConfigMap vorbereitet, k6-Job nur im Server-Dry-Run
+geprueft. Noch kein Lasttest gestartet.
+
+16:48-16:53 Uhr: Erster k6-Lauf beendet, aber NICHT bestanden: 472/1950 Logins
+erfolgreich (24.20%), P95 erfolgreicher Antworten 11.62 s. Java-Heapmangel bei
+Argon2 und anschliessende Probe-Neustarts nachgewiesen. Korrektur fuer Staging
+vorbereitet und vor Rollout validiert; Wiederholung offen.
+Siehe [Messwerte und Diagnose](loadtest-first-run.md).
+
 ## Aufgabe 3: Import nach Freigabe erfolgreich
 
 Der Eigentuemer hat bestaetigt, dass Pruefung 2 abgeschlossen ist. generated.tf
@@ -143,11 +161,9 @@ Lesend am bestehenden Cluster festgestellt:
 - Zu Beginn noch keine Managed-Datenbanken vorhanden; Erstellung siehe oben.
 
 Ausstehend (NICHT als bestanden behauptet):
-- Quell-DB/PVC-Entfernung. Finaler Datenabgleich und Managed-PG-Umschaltung bestanden.
 - RED-Dashboard-Pruefung. Anwendungs-Scrape-Targets, Request-Counter,
   Duration-Histogramme, Alarmempfang und Entwarnung sind nachgewiesen.
 - k6-Lauf, HPA scale-out/scale-in und Verfuegbarkeit.
-- Kyverno-Admission-Ablehnung.
 - Live-Ausfalltests zum Module-Service. Kompletter E2E nach PostgreSQL-Umschaltung,
   TLS zu beiden Managed-Datenbanken und der GitOps-Rollout sind nachgewiesen.
 

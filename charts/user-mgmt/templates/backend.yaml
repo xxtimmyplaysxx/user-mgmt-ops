@@ -38,6 +38,13 @@ spec:
           ports:
             - name: http
               containerPort: {{ .Values.service.backendPort }}
+          {{- with .Values.backendEnv }}
+          env:
+            {{- range $name, $value := . }}
+            - name: {{ $name }}
+              value: {{ $value | quote }}
+            {{- end }}
+          {{- end }}
           envFrom:
             - configMapRef:
                 name: {{ include "user-mgmt.fullname" . }}-config
@@ -56,15 +63,11 @@ spec:
           resources:
             {{- toYaml .Values.resources.backend | nindent 12 }}
           startupProbe:
-            httpGet: { path: /actuator/health/liveness, port: http }
-            failureThreshold: 60
-            periodSeconds: 5
+            {{- toYaml .Values.backendProbes.startup | nindent 12 }}
           livenessProbe:
-            httpGet: { path: /actuator/health/liveness, port: http }
-            periodSeconds: 10
+            {{- toYaml .Values.backendProbes.liveness | nindent 12 }}
           readinessProbe:
-            httpGet: { path: /actuator/health/readiness, port: http }
-            periodSeconds: 5
+            {{- toYaml .Values.backendProbes.readiness | nindent 12 }}
       {{- if .Values.managedDatabase.enabled }}
       volumes:
         - name: postgres-ca
