@@ -35,6 +35,13 @@ Argon2 und anschliessende Probe-Neustarts nachgewiesen. Korrektur fuer Staging
 vorbereitet und vor Rollout validiert; Wiederholung offen.
 Siehe [Messwerte und Diagnose](loadtest-first-run.md).
 
+17:06-17:08 Uhr: Ops PR 5 synchronisiert, Backend-Rollout erfolgreich. Neue
+Runtime-Einstellungen live bestaetigt; Login und alle sechs HTTP-E2E-Faelle
+bestanden. Alte Test-Logs gesichert, beendeter Job entfernt und neue Test-ConfigMap
+vorbereitet. Wiederholung noch nicht gestartet; stabile HPA-Ausgangslage abwarten.
+17:09:37 Uhr: Ausgangslage ueber mindestens 45 Sekunden stabil: ein Ready-Backend,
+null Restarts, HPA current=desired=1, Argo CD Synced/Healthy. Bereit fuer Wiederholung.
+
 ## Aufgabe 3: Import nach Freigabe erfolgreich
 
 Der Eigentuemer hat bestaetigt, dass Pruefung 2 abgeschlossen ist. generated.tf

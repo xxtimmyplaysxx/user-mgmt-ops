@@ -26,7 +26,8 @@ Konfiguration. Kyverno ist installiert; drei Enforce-Policies und zwoelf
 Admission-Pruefungen sind [live nachgewiesen](evidence/kyverno-admission.md).
 Der erste Lasttest ist [fehlgeschlagen und ausgewertet](evidence/loadtest-first-run.md):
 Java-Heapmangel bei parallelen Passwortpruefungen, anschliessend Probe-Neustarts.
-Eine Korrektur fuer Staging ist vorbereitet; Rollout und Wiederholung stehen aus.
+Die Korrektur aus Ops PR 5 ist in Staging ausgerollt; alle sechs Funktionstests
+bestehen erneut. Der Wiederholungslauf steht noch aus.
 [Nachweis](evidence/postgres-final-copy.md),
 [Ablauf und Rueckweg](evidence/postgres-cutover-runbook.md).
 
@@ -39,7 +40,7 @@ privaten Verbindungen erreichbar; ihre Zugangsdaten kommen aus Secrets.
 | Aufgabe | Vorbereitet | Noch praktisch nachzuweisen |
 |---|---|---|
 | 1 Observability | Stack, CPU/RAM-/HTTP-Metriken, 3 Dashboards; echter Alarm und Entwarnung beim Webhook empfangen | RED-Dashboards pruefen |
-| 2 Lasttest | Erster Lauf dokumentiert: 24.20% erfolgreiche Logins; Heap-/CPU-Korrektur vorbereitet | Korrektur ausrollen, bestandener Wiederholungslauf, HPA scale-out/scale-in und Diagramme |
+| 2 Lasttest | Erster Lauf dokumentiert: 24.20% erfolgreiche Logins; Heap-/CPU-Korrektur ausgerollt, Funktionstests bestanden | Bestandener Wiederholungslauf, HPA scale-out/scale-in und Diagramme |
 | 3 IaC | Provider, generierte/bereinigte Konfiguration, Variablen, Import und No-change-Plan erfolgreich | Erledigt; State lokal erhalten |
 | 4 Managed PostgreSQL | Datenkopie, Vergleich, Umschaltung, JDBC-TLS/E2E und Entfernung von Quell-DB/PVC/Cloud-Volume nachgewiesen | Erledigt fuer Staging |
 | 5 Kyverno | Installation, 3 Enforce-Policies, Ablehnung und 12 Live-Gegenproben | Erledigt fuer Staging |
@@ -170,6 +171,7 @@ Am 27.09. wurde diese Vorbereitung erfolgreich ausgefuehrt.
 ```powershell
 .\scripts\Prepare-StagingLoadTest.ps1
 kubectl --context do-fra1-vsc-orchestrierung apply -f loadtest/job.yaml
+kubectl --context do-fra1-vsc-orchestrierung -n user-mgmt-staging wait job/user-mgmt-loadtest "--for=jsonpath={.status.ready}=1" --timeout=120s
 kubectl --context do-fra1-vsc-orchestrierung -n user-mgmt-staging logs -f job/user-mgmt-loadtest --pod-running-timeout=120s
 # In einem zweiten Terminal die Skalierung beobachten:
 kubectl --context do-fra1-vsc-orchestrierung -n user-mgmt-staging get hpa -w
