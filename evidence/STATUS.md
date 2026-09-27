@@ -1,8 +1,21 @@
 # Nachweisstatus 27.09.2026
 
-Diese Datei unterscheidet lokale Tests von noch ausstehenden Live-Nachweisen.
+**Stand 17:49 Uhr: Die dokumentierten Live-Pruefungen fuer Aufgaben 1-6 sind bestanden.**
+Der letzte [Module-Ausfalltest](module-resilience.md) belegt begrenzte 503-Antworten,
+Circuit-Breaker-Schutz und Erholung. Beide Argo-Anwendungen sind wieder
+Synced/Healthy, Staging-Pods Ready ohne neue Restarts. Die fehlenden PostgreSQL-
+Statistiken wurden nachgeholt; fuenf parallele Modulzuweisungen bestehen ebenfalls.
+Die Abgabe besteht aus den beiden GitHub-Repositories und den verlinkten Nachweisen;
+die abschliessende Bewertung und muendliche Abnahme erfolgen durch die Lehrperson.
 
-Aktuell 16:17 Uhr: Nach Wartungs-Merge Ops PR 2 wurde der aktuelle Quellstand neu
+Die folgende Chronologie behaelt auch fruehere, inzwischen erledigte Zwischenstaende.
+
+Abschlusskontrolle 17:55 Uhr: Terraform-Plan `No changes` (Exitcode 0), alle sechs
+Live-E2E-Faelle nach der Statistikwartung erneut bestanden, Backend-HPA wieder bei
+einer Replik und alle vier Kyverno-Deployments Ready. Git verfolgt keine State-,
+Plan-, Dump-, tfvars-, .env- oder privaten Schluesseldateien in diesem Ops-Repository.
+
+16:17 Uhr: Nach Wartungs-Merge Ops PR 2 wurde der aktuelle Quellstand neu
 gesichert und in Managed PostgreSQL wiederhergestellt. Alle fuenf geprueften
 Objekte stimmen ueberein, TLS 1.3/verify-full. Beide Archive sind lokal gesichert.
 Anwendung noch in Wartung; Managed-PG-Start und E2E folgen separat.
@@ -174,12 +187,16 @@ Lesend am bestehenden Cluster festgestellt:
   inzwischen zwei Ready-Nodes, siehe oben.
 - Zu Beginn noch keine Managed-Datenbanken vorhanden; Erstellung siehe oben.
 
-Ausstehend (NICHT als bestanden behauptet):
+Verbleibende persoenliche Vorbereitung:
 - Optionale visuelle Grafana-Demo in der angemeldeten Browser-Sitzung. Drei
   provisionierte Dashboards, alle zehn Abfragen, echte RED-Metriken und beide
   Alarmzustaende sind technisch nachgewiesen.
-- Live-Ausfalltests zum Module-Service. Kompletter E2E nach PostgreSQL-Umschaltung,
-  TLS zu beiden Managed-Datenbanken und der GitOps-Rollout sind nachgewiesen.
+- Muendliche Erklaerung der Architektur, Messwerte und gefundenen Fehler.
+  [Lernzettel](../PRUEFUNGSVORBEREITUNG.md).
+
+17:46-17:47 Uhr: Der Live-Ausfalltest des Module-Service ist bestanden. Netzwerkregel
+und Argo-Auto-Sync wurden auf den Ausgangswert zurueckgestellt. Kompletter E2E nach
+PostgreSQL-Umschaltung, TLS zu beiden Managed-Datenbanken und GitOps sind nachgewiesen.
 
 Nachweise mit Uhrzeit und Commit-SHA ergaenzen. Keine Tokens, Passwoerter,
 JWTs, State-Dateien oder Datenbankinhalte in diese Dokumentation kopieren.

@@ -1,53 +1,31 @@
 # VSC Observability - Abgabe und Betriebsanleitung
 
-## Aktueller Status: vorbereitet, noch nicht live abgenommen
+## Aktueller Status: Aufgaben 1-6 live nachgewiesen
 
-Die bestehende Plattform wird fuer die Aufgaben 1-6 erweitert. **Dieser Branch ist
-noch keine vollstaendig nachgewiesene Abgabe.** Pruefung 2 ist laut Bestaetigung des
-Eigentuemers abgeschlossen. Der bestehende Cluster wurde anschliessend erfolgreich
-in Terraform importiert: keine Ressourcen erstellt, geaendert oder geloescht;
-abschliessender Plan "No changes". Managed PostgreSQL 16 und MySQL 8.4 sowie die
-beiden Datenbanken und Firewalls sind erstellt; der erneute Plan zeigt keine
-Aenderungen. Beide Worker sind Ready. Das Staging-Backup wurde in Managed
-PostgreSQL wiederhergestellt: TLS 1.3 mit Zertifikatspruefung, fuenf
-Tabellen/Sequenzen stimmen beim Datenvergleich ueberein. Die Anwendung nutzt jetzt
-Managed PostgreSQL; zehn echte JDBC-Verbindungen mit TLS 1.3 sind nachgewiesen.
-Module-Service und Anwendungsmetriken sind ausgerollt: beide Scrape-Targets up,
-MySQL TLS 1.3 mit Zertifikatspruefung. Der erste
-Live-E2E-Lauf fand einen HTTP-Fehlerstatus-Bug. Dieser ist mit Application-PR 3
-behoben; die Wiederholung besteht alle sechs HTTP-Testfaelle nach erfolgreicher
-Registrierung/Anmeldung. Siehe [Rollout-Nachweis](evidence/module-rollout.md).
+Stand **27.09.2026, 17:49 Uhr Europe/Zurich**. Die dokumentierten technischen
+Pruefungen sind bestanden. Staging und Production sind in Argo CD Synced/Healthy;
+alle drei Staging-Deployments sind Ready. Die Bewertung und muendliche Abnahme
+erfolgen durch die Lehrperson.
 
-**Die Staging-PostgreSQL-Migration ist abgeschlossen.** Die Anwendung verwendet
-Managed PostgreSQL; auch der anschliessende Live-E2E besteht alle sechs Faelle.
-Alte Staging-DB, Service, Netzwerkregel, PVC, PV und Cloud-Volume sind entfernt.
-Die lokale Quell-Sicherung ist verifiziert. Production bleibt in ihrer bestehenden
-Konfiguration. Kyverno ist installiert; drei Enforce-Policies und zwoelf
-Admission-Pruefungen sind [live nachgewiesen](evidence/kyverno-admission.md).
-Der erste Lasttest ist [fehlgeschlagen und ausgewertet](evidence/loadtest-first-run.md):
-Java-Heapmangel bei parallelen Passwortpruefungen, anschliessend Probe-Neustarts.
-Die Korrektur aus Ops PR 5 ist in Staging ausgerollt; alle sechs Funktionstests
-bestehen erneut. Der Wiederholungslauf hat **3282/3282 erfolgreiche Logins, null
-HTTP-Fehler und P95 1.06 s** erreicht. HPA **1 -> 2 -> 1**, durchgehend mindestens
-ein verfuegbares Backend und null Restarts sind nachgewiesen.
-[Messwerte und Diagramm](evidence/loadtest-passed.md).
-[Nachweis](evidence/postgres-final-copy.md),
-[Ablauf und Rueckweg](evidence/postgres-cutover-runbook.md).
+Die Abgabe besteht aus zwei Repositories:
 
-Die Anwendung einschliesslich des vom Lehrer bereitgestellten Module Service liegt
-in https://github.com/xxtimmyplaysxx/user-mgmt-service-kubernetes auf `main`.
-Staging betreibt den User-Service mit Managed PostgreSQL, den Module-Service mit
-Managed MySQL und die Anwendungsmetriken. Datenbanken sind nur ueber die vorgesehenen
-privaten Verbindungen erreichbar; ihre Zugangsdaten kommen aus Secrets.
+- [Application: Java, Frontend und Module-Service](https://github.com/xxtimmyplaysxx/user-mgmt-service-kubernetes)
+- [Ops: Terraform, Helm, Argo CD, Monitoring, Policies und Nachweise](https://github.com/xxtimmyplaysxx/user-mgmt-ops)
 
-| Aufgabe | Vorbereitet | Noch praktisch nachzuweisen |
+| Aufgabe | Ergebnis | Nachweis |
 |---|---|---|
-| 1 Observability | Stack, 3 provisionierte Dashboards und 10 Abfragen mit echten Daten; Alarm und Entwarnung zugestellt | Technisch nachgewiesen; Browser-Demo in der angemeldeten Grafana-Sitzung |
-| 2 Lasttest | Wiederholung bestanden: 3282/3282 Logins, P95 1.06 s, HPA 1 -> 2 -> 1, Kurven und Rohdaten in Git | Erledigt fuer das dokumentierte Testprofil |
-| 3 IaC | Provider, generierte/bereinigte Konfiguration, Variablen, Import und No-change-Plan erfolgreich | Erledigt; State lokal erhalten |
-| 4 Managed PostgreSQL | Datenkopie, Vergleich, Umschaltung, JDBC-TLS/E2E und Entfernung von Quell-DB/PVC/Cloud-Volume nachgewiesen | Erledigt fuer Staging |
-| 5 Kyverno | Installation, 3 Enforce-Policies, Ablehnung und 12 Live-Gegenproben | Erledigt fuer Staging |
-| 6 Microservices | REST-Client mit Resilienz, CI/GitOps-Rollout, Metriken und Managed MySQL/TLS live, alle sechs Live-E2E-Faelle auch nach PostgreSQL-Umschaltung bestanden | Ausfallfaelle und Laststabilitaet |
+| 1 Observability | Stack, drei Dashboards und zehn Abfragen mit echten Daten; Alarm und Entwarnung zugestellt | [Monitoring](evidence/monitoring-installation.md), [Alert](evidence/alert-delivery.md), [Dashboard-Abfragen](evidence/loadtest-passed.md) |
+| 2 Lasttest | 3282/3282 Logins, P95 1.06 s, keine HTTP-Fehler; HPA 1 -> 2 -> 1, keine Backend-Neustarts | [Test, Rohdaten und Kurven](evidence/loadtest-passed.md) |
+| 3 IaC | Bestehenden Cluster importiert, Konfiguration bereinigt, Variablen und No-change-Plan | [Terraform](terraform/README.md) |
+| 4 Managed PostgreSQL | Backup, Vergleich, TLS, Umschaltung, E2E und Entfernung der alten Staging-DB samt Volume; ANALYZE nachgeholt | [Datenabgleich](evidence/postgres-final-copy.md), [Ablauf](evidence/postgres-cutover-runbook.md) |
+| 5 Kyverno | Drei Enforce-Policies und zwoelf Live-Gegenproben bestanden | [Admission](evidence/kyverno-admission.md) |
+| 6 Microservices | REST-Zuweisung, Managed MySQL/TLS, CI/GitOps, Metriken, sechs E2E-Faelle und kontrollierter Netzwerkausfall mit Erholung | [Rollout](evidence/module-rollout.md), [Resilienz](evidence/module-resilience.md) |
+
+[Chronologie](evidence/STATUS.md) und [deutscher Lernzettel fuer die muendliche Pruefung](PRUEFUNGSVORBEREITUNG.md).
+Die frueheren Fehler sind nachvollziehbar dokumentiert: [erster Lasttest](evidence/loadtest-first-run.md)
+und [fehlende Planerstatistiken nach Restore](evidence/module-resilience.md).
+Die Nachweise gelten fuer das angegebene Testprofil und die angegebenen Images;
+sie ersetzen keine allgemeine Verfuegbarkeits- oder Kapazitaetsgarantie.
 
 ## Vorhandene Umgebung
 
@@ -58,7 +36,7 @@ privaten Verbindungen erreichbar; ihre Zugangsdaten kommen aus Secrets.
 - Vor der Erweiterung belegte der einzelne Worker rund 94% seines allocatable RAM.
   Ressourcen und tatsaechlichen Verbrauch nach Installation erneut beobachten.
 
-## Reihenfolge nach Freigabe
+## Durchgefuehrter Aufbau und Reihenfolge fuer eine neue Umgebung
 
 1. Zustand und Daten sichern; Kapazitaet fuer Monitoring, Policies und Lasttest schaffen.
 2. Cluster mit Terraform importieren, dabei zuerst einen reinen Import ohne

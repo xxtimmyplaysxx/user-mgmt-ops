@@ -1,6 +1,7 @@
 param(
     [string]$Context = 'do-fra1-vsc-orchestrierung',
-    [string]$Namespace = 'user-mgmt-staging'
+    [string]$Namespace = 'user-mgmt-staging',
+    [switch]$AnalyzeTables
 )
 
 $ErrorActionPreference = 'Stop'
@@ -8,6 +9,13 @@ $opsRoot = Split-Path -Parent $PSScriptRoot
 $prepared = Get-Content -LiteralPath (Join-Path $opsRoot 'tmp\managed-databases.json') -Raw | ConvertFrom-Json
 if ($prepared.context -ne $Context -or $prepared.namespace -ne $Namespace) { throw 'Prepared database metadata does not match the requested environment.' }
 $pg = $prepared.databases.postgres
+# pg_restore does not restore planner statistics. ANALYZE updates statistics only;
+# this optional step is restricted to the five known staging application tables.
+if ($AnalyzeTables -and ($Context -ne 'do-fra1-vsc-orchestrierung' -or $Namespace -ne 'user-mgmt-staging')) {
+    throw 'Statistics maintenance is restricted to the course staging environment.'
+}
+$clientOptions = '-c default_transaction_read_only=on -c statement_timeout=20000'
+if ($AnalyzeTables) { $clientOptions = '-c statement_timeout=20000' }
 $backend = kubectl --context $Context -n $Namespace get deployment user-mgmt-backend -o json | ConvertFrom-Json
 if ($LASTEXITCODE -ne 0 -or $backend.status.readyReplicas -lt 1) { throw 'Backend must be Ready before verifying its database connections.' }
 if ($backend.spec.template.spec.containers[0].envFrom[-1].secretRef.name -ne 'user-mgmt-managed-postgres') {
@@ -40,7 +48,7 @@ $pod = @{
                 @{ name = 'PGHOST'; value = $pg.host }, @{ name = 'PGPORT'; value = [string]$pg.port },
                 @{ name = 'PGDATABASE'; value = $pg.database }, @{ name = 'PGSSLMODE'; value = 'verify-full' },
                 @{ name = 'PGSSLROOTCERT'; value = '/etc/postgres-tls/ca.crt' }, @{ name = 'PGCONNECT_TIMEOUT'; value = '15' },
-                @{ name = 'PGAPPNAME'; value = $podName }, @{ name = 'PGOPTIONS'; value = '-c default_transaction_read_only=on' },
+                @{ name = 'PGAPPNAME'; value = $podName }, @{ name = 'PGOPTIONS'; value = $clientOptions },
                 @{ name = 'PGUSER'; valueFrom = @{ secretKeyRef = @{ name = 'user-mgmt-managed-postgres'; key = 'SPRING_DATASOURCE_USERNAME' } } },
                 @{ name = 'PGPASSWORD'; valueFrom = @{ secretKeyRef = @{ name = 'user-mgmt-managed-postgres'; key = 'SPRING_DATASOURCE_PASSWORD' } } }
             )
@@ -62,6 +70,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Verification client did not become Ready.' }
     $sql = @'
 SELECT json_build_object(
+  'table_statistics', (SELECT json_agg(json_build_object('table',relname,'estimated_rows',n_live_tup,'last_analyze',last_analyze,'last_autoanalyze',last_autoanalyze)) FROM pg_stat_user_tables WHERE schemaname='public'),
   'database', current_database(),
   'client_tls', (SELECT version FROM pg_stat_ssl WHERE pid=pg_backend_pid() AND ssl),
   'jdbc_connections', count(*),
@@ -71,6 +80,9 @@ SELECT json_build_object(
 FROM pg_stat_activity a LEFT JOIN pg_stat_ssl s ON s.pid=a.pid
 WHERE a.datname=current_database() AND a.application_name='PostgreSQL JDBC Driver';
 '@
+    if ($AnalyzeTables) {
+        $sql = 'ANALYZE public.users, public.role, public.authority, public.users_role, public.role_authority;' + "`n" + $sql
+    }
     $result = $sql | kubectl --context $Context -n $Namespace exec -i $podName -- psql -X -qAt -v ON_ERROR_STOP=1
     if ($LASTEXITCODE -ne 0) { throw 'Managed PostgreSQL read-only verification query failed.' }
     $connection = $result | ConvertFrom-Json

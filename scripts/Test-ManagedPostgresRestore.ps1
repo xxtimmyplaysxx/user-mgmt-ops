@@ -120,6 +120,11 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Restore failed; transaction rolled back. Raw output withheld to protect database contents.' }
     $restoreOutput = $null
 
+    # PostgreSQL 16 dumps do not include planner statistics. Without ANALYZE,
+    # the authenticated user lookup can be slow even on these small tables.
+    kubectl --context $Context -n $Namespace exec $podName -- psql -X -qAt -v ON_ERROR_STOP=1 -c 'SET statement_timeout=20000; ANALYZE public.users, public.role, public.authority, public.users_role, public.role_authority;'
+    if ($LASTEXITCODE -ne 0) { throw 'Restore completed, but planner statistics could not be refreshed. Verify before starting the application.' }
+
     $sql = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'database-fingerprint.sql') -Raw
     $target = @($sql | kubectl --context $Context -n $Namespace exec -i $podName -- psql -X -qAt -v ON_ERROR_STOP=1)
     if ($LASTEXITCODE -ne 0) { throw 'Could not fingerprint restored database.' }
