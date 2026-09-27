@@ -2,6 +2,15 @@
 
 Diese Datei unterscheidet lokale Tests von noch ausstehenden Live-Nachweisen.
 
+Aktuell 16:17 Uhr: Nach Wartungs-Merge Ops PR 2 wurde der aktuelle Quellstand neu
+gesichert und in Managed PostgreSQL wiederhergestellt. Alle fuenf geprueften
+Objekte stimmen ueberein, TLS 1.3/verify-full. Beide Archive sind lokal gesichert.
+Anwendung noch in Wartung; Managed-PG-Start und E2E folgen separat.
+Siehe [finaler Datenabgleich](postgres-final-copy.md).
+
+16:18:42 Uhr: Der waehrend der geplanten Wartung ausgeloeste Verfuegbarkeitsalarm
+wurde vom Alertmanager-Webhook empfangen. [Zustellnachweis](alert-delivery.md).
+
 ## Aufgabe 3: Import nach Freigabe erfolgreich
 
 Der Eigentuemer hat bestaetigt, dass Pruefung 2 abgeschlossen ist. generated.tf
@@ -128,10 +137,10 @@ Lesend am bestehenden Cluster festgestellt:
 - Zu Beginn noch keine Managed-Datenbanken vorhanden; Erstellung siehe oben.
 
 Ausstehend (NICHT als bestanden behauptet):
-- Finaler Datenabgleich bei gestoppten Schreibzugriffen und Anwendungs-Umschaltung
-  auf die erstellten Managed-Datenbanken.
-- RED-Dashboard-Pruefung und tatsaechlicher Alert-Empfang. Anwendungs-Scrape-Targets,
-  Request-Counter und Duration-Histogramme sind inzwischen nachgewiesen.
+- Anwendungs-Umschaltung auf Managed PostgreSQL und Quell-DB/PVC-Entfernung.
+  Der finale Datenabgleich bei gestoppten Schreibzugriffen ist bestanden.
+- RED-Dashboard-Pruefung und Alarmaufloesung nach Wartung. Anwendungs-Scrape-Targets,
+  Request-Counter, Duration-Histogramme und tatsaechlicher Alarmempfang sind nachgewiesen.
 - k6-Lauf, HPA scale-out/scale-in und Verfuegbarkeit.
 - Kyverno-Admission-Ablehnung.
 - Live-Ausfalltests und erneuter E2E-Lauf nach PostgreSQL-Umschaltung.

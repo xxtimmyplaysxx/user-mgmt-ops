@@ -18,9 +18,12 @@ Live-E2E-Lauf fand einen HTTP-Fehlerstatus-Bug. Dieser ist mit Application-PR 3
 behoben; die Wiederholung besteht alle sechs HTTP-Testfaelle nach erfolgreicher
 Registrierung/Anmeldung. Siehe [Rollout-Nachweis](evidence/module-rollout.md).
 
-**Dieser Branch aktiviert voruebergehend Staging-Wartung**: Backend 0, HPA aus.
-Nach dem Merge ist die Staging-API bis zum separaten Managed-PG-Cutover nicht
-verfuegbar. Ablauf und Rueckweg: [Cutover-Anleitung](evidence/postgres-cutover-runbook.md).
+**Dieser Branch beendet die Staging-Wartung und aktiviert Managed PostgreSQL.**
+Der frische Datenabgleich bei gestopptem Backend war erfolgreich: alle fuenf
+Tabellen-/Sequenz-Fingerprints stimmen ueberein, TLS 1.3 mit Zertifikatspruefung.
+Die Quelle bleibt bis zur erfolgreichen Anwendungspruefung erhalten.
+[Nachweis](evidence/postgres-final-copy.md),
+[Ablauf und Rueckweg](evidence/postgres-cutover-runbook.md).
 
 Die Anwendung einschliesslich des vom Lehrer bereitgestellten Module Service liegt
 in https://github.com/xxtimmyplaysxx/user-mgmt-service-kubernetes auf `main`.
@@ -30,10 +33,10 @@ abschliessenden Datenabgleich und die kontrollierte Umschaltung erhalten.
 
 | Aufgabe | Vorbereitet | Noch praktisch nachzuweisen |
 |---|---|---|
-| 1 Observability | Stack installiert, Infrastruktur- und Anwendungs-Targets up, CPU/RAM- und HTTP-Metriken, 3 Dashboards geladen, Webhook-Empfaenger laeuft | RED-Dashboards pruefen, zugestellter Testalarm |
+| 1 Observability | Stack, CPU/RAM-/HTTP-Metriken, 3 Dashboards; echter Verfuegbarkeitsalarm beim Webhook empfangen | RED-Dashboards pruefen, Alarmaufloesung nach Wartung |
 | 2 Lasttest | k6-Skript, Job und Netzwerkregeln | Testlauf, HPA scale-out und scale-in, Verfuegbarkeit und Diagramme |
 | 3 IaC | Provider, generierte/bereinigte Konfiguration, Variablen, Import und No-change-Plan erfolgreich | Erledigt; State lokal erhalten |
-| 4 Managed PostgreSQL | Managed DB/Firewall/Secret erstellt, Backup wiederhergestellt, TLS und Datenvergleich erfolgreich | Schreibzugriffe stoppen, finalen Datenstand uebernehmen, umstellen, alte DB/PVC entfernen |
+| 4 Managed PostgreSQL | Managed DB/Firewall/Secret erstellt; frischer Datenstand bei gestopptem Backend kopiert, TLS und Datenvergleich erfolgreich | Anwendung auf Managed PG starten und pruefen, alte DB/PVC entfernen |
 | 5 Kyverno | Helm-values, 3 Enforce-Policies, ungueltiges Deployment | Installation und dokumentierte Admission-Ablehnung |
 | 6 Microservices | REST-Client mit Resilienz, CI/GitOps-Rollout, Metriken und Managed MySQL/TLS live, alle sechs Live-E2E-Faelle bestanden | Ausfallfaelle und Laststabilitaet, E2E nach PostgreSQL-Umschaltung wiederholen |
 
@@ -80,6 +83,7 @@ Der konfigurierte Benachrichtigungskanal ist ein interner HTTP-Webhook, dessen
 Empfang mit `kubectl -n monitoring logs deploy/alert-receiver` nachgewiesen wird.
 Dies ist keine E-Mail-/Chat-Benachrichtigung. Falls eine solche verlangt wird,
 einen autorisierten Empfaenger ueber ein Secret konfigurieren.
+Die erste echte Zustellung ist [waehrend der geplanten Wartung nachgewiesen](evidence/alert-delivery.md).
 Die lokalen Receiver-Logs sind nicht dauerhaft: Nachweise nach dem Test sichern.
 CPU/Memory-Dashboard sowie separate RED-Dashboards fuer User- und Module-Service.
 

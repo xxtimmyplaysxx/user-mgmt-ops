@@ -37,8 +37,10 @@ Der bisherige Standardmodus von `Test-ManagedPostgresRestore.ps1` bleibt auf ein
 leeres Ziel beschraenkt. Nur der explizite Schalter `-RefreshTrialRestore` aktiviert
 den beschriebenen, geschuetzten Austausch des Teststands.
 
-Status vor Ausfuehrung: PowerShell-Syntax und Abbruch bei laufendem Backend sind
-geprueft; der neue Refresh-Ablauf ist noch nicht live ausgefuehrt.
+Live-Ausfuehrung am 27.09.2026 um 16:17 Uhr erfolgreich: beide Archive und
+Pruefsummen verifiziert, transaktionaler Restore mit TLS 1.3 abgeschlossen,
+alle fuenf Tabellen-/Sequenz-Fingerprints stimmen ueberein.
+Details: [Finaler Datenabgleich](postgres-final-copy.md).
 
 ## 3. Anwendung gegen Managed PostgreSQL starten
 
