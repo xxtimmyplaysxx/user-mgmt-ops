@@ -1,0 +1,13 @@
+{
+  "checked_at_local": "2026-09-27 16:26",
+  "timezone": "Europe/Zurich",
+  "result": {
+    "database": "usermgmt_staging",
+    "client_tls": "TLSv1.3",
+    "jdbc_connections": 10,
+    "all_jdbc_tls": true,
+    "jdbc_tls_versions": [
+      "TLSv1.3"
+    ]
+  }
+}

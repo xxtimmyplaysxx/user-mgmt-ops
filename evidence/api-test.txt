@@ -1,0 +1,10 @@
+started_at_utc: 2026-09-27T17:19:41.1483468Z
+base_url: http://staging-user-mgmt-k8s-nt.duckdns.org/api
+backend_image: ghcr.io/xxtimmyplaysxx/user-mgmt-backend:0d7f897016f9741e6cc9f8eb4b5a2d8471976bed
+
+PASS assignment: HTTP 204
+PASS idempotent repeat: HTTP 204
+PASS missing module: HTTP 404
+PASS invalid module ID: HTTP 400
+PASS unauthenticated: HTTP 403
+PASS another user's assignment: HTTP 403
