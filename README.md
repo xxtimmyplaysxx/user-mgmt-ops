@@ -170,7 +170,7 @@ Am 27.09. wurde diese Vorbereitung erfolgreich ausgefuehrt.
 kubectl --context do-fra1-vsc-orchestrierung apply -f loadtest/job.yaml
 kubectl --context do-fra1-vsc-orchestrierung -n user-mgmt-staging logs -f job/user-mgmt-loadtest --pod-running-timeout=120s
 # In einem zweiten Terminal die Skalierung beobachten:
-kubectl --context do-fra1-vsc-orchestrierung -n user-mgmt-staging get hpa,pods -w
+kubectl --context do-fra1-vsc-orchestrierung -n user-mgmt-staging get hpa -w
 ```
 
 Das Skript lastet den Login als echten API-Endpunkt aus: 2 -> 10 -> 20 -> 0 VUs.
