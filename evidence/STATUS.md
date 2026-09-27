@@ -35,6 +35,20 @@ Argon2 und anschliessende Probe-Neustarts nachgewiesen. Korrektur fuer Staging
 vorbereitet und vor Rollout validiert; Wiederholung offen.
 Siehe [Messwerte und Diagnose](loadtest-first-run.md).
 
+17:06-17:08 Uhr: Ops PR 5 synchronisiert, Backend-Rollout erfolgreich. Neue
+Runtime-Einstellungen live bestaetigt; Login und alle sechs HTTP-E2E-Faelle
+bestanden. Alte Test-Logs gesichert, beendeter Job entfernt und neue Test-ConfigMap
+vorbereitet. Wiederholung noch nicht gestartet; stabile HPA-Ausgangslage abwarten.
+17:09:37 Uhr: Ausgangslage ueber mindestens 45 Sekunden stabil: ein Ready-Backend,
+null Restarts, HPA current=desired=1, Argo CD Synced/Healthy. Bereit fuer Wiederholung.
+
+17:10-17:17 Uhr: Wiederholung BESTANDEN: 3282 erfolgreiche Logins, null HTTP-Fehler,
+P95 1.06 s, keine unterbrochenen Iterationen. Job Exitcode 0/Complete. HPA 1 -> 2 -> 1,
+durchgehend mindestens ein verfuegbares Backend, null Restarts und OOM-Ereignisse.
+[Nachweis mit Rohdaten und Diagramm](loadtest-passed.md). Alle zehn Dashboard-
+Abfragen mit echten Messwerten geprueft; Grafana-API bestaetigt drei aktualisierte
+Dashboards. Fehlerquoten und Replica-Legenden korrigiert.
+
 ## Aufgabe 3: Import nach Freigabe erfolgreich
 
 Der Eigentuemer hat bestaetigt, dass Pruefung 2 abgeschlossen ist. generated.tf
@@ -161,9 +175,9 @@ Lesend am bestehenden Cluster festgestellt:
 - Zu Beginn noch keine Managed-Datenbanken vorhanden; Erstellung siehe oben.
 
 Ausstehend (NICHT als bestanden behauptet):
-- RED-Dashboard-Pruefung. Anwendungs-Scrape-Targets, Request-Counter,
-  Duration-Histogramme, Alarmempfang und Entwarnung sind nachgewiesen.
-- k6-Lauf, HPA scale-out/scale-in und Verfuegbarkeit.
+- Optionale visuelle Grafana-Demo in der angemeldeten Browser-Sitzung. Drei
+  provisionierte Dashboards, alle zehn Abfragen, echte RED-Metriken und beide
+  Alarmzustaende sind technisch nachgewiesen.
 - Live-Ausfalltests zum Module-Service. Kompletter E2E nach PostgreSQL-Umschaltung,
   TLS zu beiden Managed-Datenbanken und der GitOps-Rollout sind nachgewiesen.
 

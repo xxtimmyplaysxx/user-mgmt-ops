@@ -88,8 +88,35 @@ semantischer Vergleich aller Production-Manifeste (unveraendert), Server-Dry-Run
 von Staging-Deployments/HPA/Quota gegen die aktiven Policies. Die vorhandene
 Container-JVM akzeptiert die vorgeschlagenen Flags und meldet 256 MiB MaxHeapSize.
 
-**Rollout und Wiederholungstest stehen noch aus.** Nach dem Merge erst den
-Argo-CD-Rollout und eine stabile Ausgangslage mit einem Ready-Backend abwarten.
-Danach den gesicherten beendeten Job entfernen, ConfigMap aktualisieren und
-denselben k6-Test erneut ausfuehren. Erfolgsrate, Antwortzeiten, Restarts,
-CPU/RAM sowie Scale-out UND Scale-in erneut messen und dokumentieren.
+## Korrektur ausgerollt, 17:06-17:08 Uhr
+
+Der Eigentuemer hat Ops PR 5 gemergt; main steht auf
+`b8bd1dedc903cec87cbc1ca3e8cb3f7104c1bd9a`. Argo CD hat diese Revision synchronisiert,
+`kubectl rollout status` ist erfolgreich. Das neue Backend-ReplicaSet heisst
+`user-mgmt-backend-7f5548cc65`. Live-Konfiguration enthaelt die oben genannten
+JVM-/Thread-, Ressourcen- und Probe-Einstellungen. Der HPA verwendet 60% von
+250m; Prometheus bestaetigt die groessere Heap-Kapazitaet der laufenden Anwendung.
+
+Login des bestehenden Lasttest-Benutzers sowie alle sechs HTTP-E2E-Faelle
+(Zuweisung, Wiederholung, fehlendes Modul, ungueltige ID, ohne Anmeldung,
+fremder Benutzer) bestehen erneut. Neue Backend-Pods haben keine Restarts.
+Der Start verursachte zunaechst ein voruebergehendes Scale-out; vor dem neuen
+Lasttest wird deshalb explizit auf einen stabilen einzelnen Pod gewartet.
+17:08:49-17:09:37 Uhr: Vier aufeinanderfolgende Messungen bestaetigen genau einen
+Ready-Pod, null Restarts und HPA current=desired=1. Argo CD ist Synced/Healthy.
+Die Ausgangslage fuer die Wiederholung ist damit dokumentiert.
+
+Der erste fehlgeschlagene Job wurde erst nach Sicherung der vollstaendigen Logs
+und Job-Metadaten sowie Pruefung von UID und Failed-Status entfernt. Die ConfigMap
+ist aktualisiert, das Secret wird wiederverwendet. Der vorbereitete neue Job
+wurde nur per Server-Dry-Run geprueft; der zweite Lasttest hat noch nicht begonnen.
+
+Beim ersten Cleanup-Versuch war der Kyverno-Webhook kurz nicht erreichbar.
+Der einzelne Admission-Controller hatte nach fehlgeschlagener Lease-Erneuerung
+neu gestartet (Exitcode 0, kein OOM). Nach seiner Erholung funktionierten Cleanup
+und Admission wieder; alle vier Controller waren Ready. Policies wurden nicht
+umgangen. Dies zeigt die bereits dokumentierte Einschraenkung der Kursinstallation
+mit nur einer Admission-Replik.
+
+**Der erfolgreiche Wiederholungstest steht noch aus.** Erfolgsrate, Antwortzeiten,
+Restarts, CPU/RAM sowie Scale-out UND Scale-in erneut messen und dokumentieren.

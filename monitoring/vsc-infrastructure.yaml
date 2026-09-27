@@ -39,7 +39,7 @@ data:
             {
               "refId": "A",
               "expr": "sum by (namespace,pod) (rate(container_cpu_usage_seconds_total{namespace=~\"user-mgmt.*\",container!=\"\",container!=\"POD\"}[2m]))",
-              "legendFormat": "{{pod}} {{route}}"
+              "legendFormat": "{{namespace}} / {{pod}}"
             }
           ],
           "fieldConfig": {
@@ -67,7 +67,7 @@ data:
             {
               "refId": "A",
               "expr": "sum by (namespace,pod) (container_memory_working_set_bytes{namespace=~\"user-mgmt.*\",container!=\"\",container!=\"POD\"})",
-              "legendFormat": "{{pod}} {{route}}"
+              "legendFormat": "{{namespace}} / {{pod}}"
             }
           ],
           "fieldConfig": {
@@ -95,7 +95,7 @@ data:
             {
               "refId": "A",
               "expr": "kube_deployment_status_replicas_available{namespace=\"user-mgmt-staging\",deployment=\"user-mgmt-backend\"}",
-              "legendFormat": "{{pod}} {{route}}"
+              "legendFormat": "{{deployment}}"
             }
           ],
           "fieldConfig": {
@@ -123,7 +123,7 @@ data:
             {
               "refId": "A",
               "expr": "kube_horizontalpodautoscaler_status_desired_replicas{namespace=\"user-mgmt-staging\"}",
-              "legendFormat": "{{pod}} {{route}}"
+              "legendFormat": "{{horizontalpodautoscaler}}"
             }
           ],
           "fieldConfig": {
