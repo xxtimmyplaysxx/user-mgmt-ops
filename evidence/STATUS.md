@@ -29,6 +29,12 @@ Aufgabe 5 nachgewiesen: [Kyverno-Admission](kyverno-admission.md).
 Lasttest-Benutzer/Secret und ConfigMap vorbereitet, k6-Job nur im Server-Dry-Run
 geprueft. Noch kein Lasttest gestartet.
 
+16:48-16:53 Uhr: Erster k6-Lauf beendet, aber NICHT bestanden: 472/1950 Logins
+erfolgreich (24.20%), P95 erfolgreicher Antworten 11.62 s. Java-Heapmangel bei
+Argon2 und anschliessende Probe-Neustarts nachgewiesen. Korrektur fuer Staging
+vorbereitet und vor Rollout validiert; Wiederholung offen.
+Siehe [Messwerte und Diagnose](loadtest-first-run.md).
+
 ## Aufgabe 3: Import nach Freigabe erfolgreich
 
 Der Eigentuemer hat bestaetigt, dass Pruefung 2 abgeschlossen ist. generated.tf

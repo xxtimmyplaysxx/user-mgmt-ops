@@ -6,6 +6,25 @@ images:
 replicas:
   backend: 1
   frontend: 1
+# The first k6 run exhausted the JVM's automatic 128Mi heap during concurrent
+# Argon2 checks. Bound HTTP concurrency and leave native-memory room below 512Mi.
+backendEnv:
+  JAVA_TOOL_OPTIONS: '-Xms128m -Xmx256m -XX:+ExitOnOutOfMemoryError'
+  SERVER_TOMCAT_THREADS_MAX: '8'
+  SERVER_TOMCAT_THREADS_MINSPARE: '2'
+  SPRING_JPA_SHOW_SQL: 'false'
+resources:
+  backend:
+    requests: { cpu: 250m, memory: 384Mi }
+    limits: { cpu: '1', memory: 512Mi }
+backendProbes:
+  startup:
+    timeoutSeconds: 5
+  liveness:
+    timeoutSeconds: 5
+    failureThreshold: 6
+  readiness:
+    timeoutSeconds: 3
 config:
   hibernateDdlAuto: update
   jwtIssuer: user-mgmt-staging
@@ -18,7 +37,8 @@ autoscaling:
   enabled: true
   minReplicas: 1
   maxReplicas: 2
-  targetCPUUtilizationPercentage: 20
+  # 60% of 250m = 150m per pod; idle CPU should not trigger repeated scaling.
+  targetCPUUtilizationPercentage: 60
   scaleDownStabilizationSeconds: 60
 podDisruptionBudget:
   enabled: true
@@ -28,7 +48,7 @@ quota:
   requestsCpu: "1"
   requestsMemory: 2Gi
   # Room for two backend replicas, module, k6 and rolling-update surge pods.
-  limitsCpu: "4"
+  limitsCpu: "5"
   limitsMemory: 4Gi
 networkPolicy:
   enabled: true

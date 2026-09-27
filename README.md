@@ -24,7 +24,9 @@ Alte Staging-DB, Service, Netzwerkregel, PVC, PV und Cloud-Volume sind entfernt.
 Die lokale Quell-Sicherung ist verifiziert. Production bleibt in ihrer bestehenden
 Konfiguration. Kyverno ist installiert; drei Enforce-Policies und zwoelf
 Admission-Pruefungen sind [live nachgewiesen](evidence/kyverno-admission.md).
-Der Lasttest ist vorbereitet und noch nicht gestartet.
+Der erste Lasttest ist [fehlgeschlagen und ausgewertet](evidence/loadtest-first-run.md):
+Java-Heapmangel bei parallelen Passwortpruefungen, anschliessend Probe-Neustarts.
+Eine Korrektur fuer Staging ist vorbereitet; Rollout und Wiederholung stehen aus.
 [Nachweis](evidence/postgres-final-copy.md),
 [Ablauf und Rueckweg](evidence/postgres-cutover-runbook.md).
 
@@ -37,7 +39,7 @@ privaten Verbindungen erreichbar; ihre Zugangsdaten kommen aus Secrets.
 | Aufgabe | Vorbereitet | Noch praktisch nachzuweisen |
 |---|---|---|
 | 1 Observability | Stack, CPU/RAM-/HTTP-Metriken, 3 Dashboards; echter Alarm und Entwarnung beim Webhook empfangen | RED-Dashboards pruefen |
-| 2 Lasttest | k6-Skript, Job und Netzwerkregeln | Testlauf, HPA scale-out und scale-in, Verfuegbarkeit und Diagramme |
+| 2 Lasttest | Erster Lauf dokumentiert: 24.20% erfolgreiche Logins; Heap-/CPU-Korrektur vorbereitet | Korrektur ausrollen, bestandener Wiederholungslauf, HPA scale-out/scale-in und Diagramme |
 | 3 IaC | Provider, generierte/bereinigte Konfiguration, Variablen, Import und No-change-Plan erfolgreich | Erledigt; State lokal erhalten |
 | 4 Managed PostgreSQL | Datenkopie, Vergleich, Umschaltung, JDBC-TLS/E2E und Entfernung von Quell-DB/PVC/Cloud-Volume nachgewiesen | Erledigt fuer Staging |
 | 5 Kyverno | Installation, 3 Enforce-Policies, Ablehnung und 12 Live-Gegenproben | Erledigt fuer Staging |
@@ -175,6 +177,8 @@ kubectl --context do-fra1-vsc-orchestrierung -n user-mgmt-staging get hpa -w
 
 Das Skript lastet den Login als echten API-Endpunkt aus: 2 -> 10 -> 20 -> 0 VUs.
 Es prueft erfolgreiche Logins, <1% HTTP-Fehler und P95 <3 Sekunden.
+Auch erfolgreiche HTTP-Antworten allein muessen P95 <3 Sekunden erreichen;
+schnelle Verbindungsfehler sollen die Latenzbewertung nicht verdecken.
 HPA-Ausgangswert, Maximum und Rueckgang zeitgestempelt festhalten, ebenso k6-Ergebnis
 und Grafana-Zeitraum. Lasthoehe nur anhand der Beobachtung anpassen. Ein vorhandenes
 Skript allein belegt noch keine erfolgreiche Skalierung.
