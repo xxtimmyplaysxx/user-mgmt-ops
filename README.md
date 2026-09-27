@@ -20,7 +20,7 @@ gleichnamigen Branch `codex/observability-microservices`.
 
 | Aufgabe | Vorbereitet | Noch praktisch nachzuweisen |
 |---|---|---|
-| 1 Observability | Stack-values, 2 ServiceMonitors, 3 Grafana-Dashboards, PrometheusRules, Alertmanager-Webhook | Installation, Scrape-Targets, Daten in Dashboards, zugestellter Alert |
+| 1 Observability | Stack installiert, 18 Infrastruktur-Targets up, CPU/RAM-Messwerte, 3 Dashboards geladen, Webhook-Empfaenger laeuft | Anwendungs-Targets nach Rollout, RED-Messwerte, zugestellter Testalarm |
 | 2 Lasttest | k6-Skript, Job und Netzwerkregeln | Testlauf, HPA scale-out und scale-in, Verfuegbarkeit und Diagramme |
 | 3 IaC | Provider, generierte/bereinigte Konfiguration, Variablen, Import und No-change-Plan erfolgreich | Erledigt; State lokal erhalten |
 | 4 Managed PostgreSQL | Managed DB/Firewall/Secret erstellt, Backup wiederhergestellt, TLS und Datenvergleich erfolgreich | Schreibzugriffe stoppen, finalen Datenstand uebernehmen, umstellen, alte DB/PVC entfernen |
@@ -55,11 +55,16 @@ gleichnamigen Branch `codex/observability-microservices`.
 
 ```powershell
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm upgrade --install monitoring prometheus-community/kube-prometheus-stack --version 91.7.0 -n monitoring --create-namespace -f monitoring/values.yaml --wait --timeout 10m
-kubectl apply -f monitoring/alert-receiver.yaml
-kubectl apply -f monitoring/vsc-infrastructure.yaml -f monitoring/vsc-user-service.yaml -f monitoring/vsc-module-service.yaml
-kubectl -n monitoring port-forward svc/monitoring-grafana 3000:80
+helm upgrade --install monitoring prometheus-community/kube-prometheus-stack --version 91.7.0 --kube-context do-fra1-vsc-orchestrierung -n monitoring --create-namespace -f monitoring/values.yaml --wait --timeout 10m
+kubectl --context do-fra1-vsc-orchestrierung apply -f monitoring/alert-receiver.yaml
+kubectl --context do-fra1-vsc-orchestrierung apply -f monitoring/vsc-infrastructure.yaml -f monitoring/vsc-user-service.yaml -f monitoring/vsc-module-service.yaml
+kubectl --context do-fra1-vsc-orchestrierung -n monitoring port-forward svc/monitoring-grafana 3000:80
 ```
+
+Live-Installation und Behebung des CRD-Timeouts: [Nachweis](evidence/monitoring-installation.md).
+Die drei VSC-Dashboards wurden ueber die Grafana-API nachgewiesen. Das
+Infrastruktur-Dashboard hat bereits Messwerte; die RED-Dashboards benoetigen den
+noch ausstehenden Anwendungs-Rollout und die ServiceMonitors.
 
 Der konfigurierte Benachrichtigungskanal ist ein interner HTTP-Webhook, dessen
 Empfang mit `kubectl -n monitoring logs deploy/alert-receiver` nachgewiesen wird.

@@ -60,6 +60,19 @@ Live-Restore-Test abgeschlossen am 27.09.2026 um 15:03 Uhr (Europe/Zurich).
 - Reproduzierbare Skripte: Prepare-ManagedDatabaseSecrets.ps1,
   Test-ManagedPostgresRestore.ps1 und database-fingerprint.sql unter scripts/.
 
+## Monitoring installiert
+
+Geprueft am 27.09.2026 um 15:13 Uhr (Europe/Zurich):
+
+- Helm-Release monitoring, Chart kube-prometheus-stack 91.7.0, Revision 1, deployed.
+- Acht Pods im Namespace monitoring sind Ready/Running, keine Restarts.
+- Prometheus meldet 18 aktive Scrape-Targets mit health=up.
+- CPU-Rate und Memory-Metriken fuer jeweils drei Staging-Container/Pods vorhanden.
+- Grafana API health=ok; alle drei VSC-Dashboard-UIDs ueber API gefunden.
+- Alert-Receiver Deployment erfolgreich gestartet; Alarmzustellung noch offen.
+- Bestehende Argo-CD-Anwendungen weiterhin Synced/Healthy.
+- Details und CRD-Timeout-Behebung: monitoring-installation.md.
+
 Erfolgreich lokal ausgefuehrt:
 - Java Gradle-Tests fuer Module-Client und Controller.
 - Python pytest: 3 Tests erfolgreich (SQLite, nicht Managed MySQL).
@@ -77,7 +90,8 @@ Lesend am bestehenden Cluster festgestellt:
 Ausstehend (NICHT als bestanden behauptet):
 - Finaler Datenabgleich bei gestoppten Schreibzugriffen und Anwendungs-Umschaltung
   auf die erstellten Managed-Datenbanken.
-- Monitoring-Installation, Scrape-Targets, Dashboard-Messwerte und Alert-Empfang.
+- Anwendungs-Scrape-Targets und RED-Dashboard-Messwerte nach GitOps-Rollout sowie
+  tatsaechlicher Alert-Empfang (Infrastruktur-Monitoring ist bereits geprueft).
 - k6-Lauf, HPA scale-out/scale-in und Verfuegbarkeit.
 - Kyverno-Admission-Ablehnung.
 - Live-E2E und Fehlerfaelle einschliesslich TLS zu Managed MySQL.
