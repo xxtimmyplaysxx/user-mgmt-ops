@@ -5,12 +5,14 @@ metadata:
   namespace: user-mgmt-staging
 spec:
   backoffLimit: 0
+  activeDeadlineSeconds: 480
   ttlSecondsAfterFinished: 3600
   template:
     metadata:
       labels: { app: k6-loadtest }
     spec:
       restartPolicy: Never
+      automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 1001

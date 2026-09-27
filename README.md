@@ -22,7 +22,9 @@ Registrierung/Anmeldung. Siehe [Rollout-Nachweis](evidence/module-rollout.md).
 Managed PostgreSQL; auch der anschliessende Live-E2E besteht alle sechs Faelle.
 Alte Staging-DB, Service, Netzwerkregel, PVC, PV und Cloud-Volume sind entfernt.
 Die lokale Quell-Sicherung ist verifiziert. Production bleibt in ihrer bestehenden
-Konfiguration. Kyverno- und Lasttest-Nachweise folgen als naechste Aufgaben.
+Konfiguration. Kyverno ist installiert; drei Enforce-Policies und zwoelf
+Admission-Pruefungen sind [live nachgewiesen](evidence/kyverno-admission.md).
+Der Lasttest ist vorbereitet und noch nicht gestartet.
 [Nachweis](evidence/postgres-final-copy.md),
 [Ablauf und Rueckweg](evidence/postgres-cutover-runbook.md).
 
@@ -38,7 +40,7 @@ privaten Verbindungen erreichbar; ihre Zugangsdaten kommen aus Secrets.
 | 2 Lasttest | k6-Skript, Job und Netzwerkregeln | Testlauf, HPA scale-out und scale-in, Verfuegbarkeit und Diagramme |
 | 3 IaC | Provider, generierte/bereinigte Konfiguration, Variablen, Import und No-change-Plan erfolgreich | Erledigt; State lokal erhalten |
 | 4 Managed PostgreSQL | Datenkopie, Vergleich, Umschaltung, JDBC-TLS/E2E und Entfernung von Quell-DB/PVC/Cloud-Volume nachgewiesen | Erledigt fuer Staging |
-| 5 Kyverno | Helm-values, 3 Enforce-Policies, ungueltiges Deployment | Installation und dokumentierte Admission-Ablehnung |
+| 5 Kyverno | Installation, 3 Enforce-Policies, Ablehnung und 12 Live-Gegenproben | Erledigt fuer Staging |
 | 6 Microservices | REST-Client mit Resilienz, CI/GitOps-Rollout, Metriken und Managed MySQL/TLS live, alle sechs Live-E2E-Faelle auch nach PostgreSQL-Umschaltung bestanden | Ausfallfaelle und Laststabilitaet |
 
 ## Vorhandene Umgebung
@@ -149,17 +151,26 @@ Die letzte Zeile MUSS abgelehnt werden. Drei Policies verlangen Requests/Limits,
 Non-root ohne Privilege Escalation und explizite Image-Tags statt latest.
 Kyverno erzeugt Controller-Regeln aus den Pod-Regeln. Die Namespace-Selektion
 verhindert, dass die Kursregeln Systemkomponenten oder alte Umgebungen blockieren.
+Init-Container werden ebenfalls geprueft. Container duerfen den Non-root-Kontext
+nicht durch Root-Overrides oder privileged=true umgehen. Reproduzierbare
+Server-Dry-Run-Pruefungen: `python scripts/verify-policies.py`.
+Installationswarnungen und Hintergrundberichte sind im
+[Live-Nachweis](evidence/kyverno-admission.md) erklaert.
 
 ## Lasttest und Nachweise
 
-Erst einen separaten Testbenutzer registrieren. Seine Zugangsdaten als
-`loadtest-credentials` mit `TEST_EMAIL` und `TEST_PASSWORD` anlegen.
+Das Vorbereitungsskript registriert einen separaten synthetischen Testbenutzer,
+prueft dessen Login und legt `loadtest-credentials` sowie die Test-ConfigMap an.
+Es nutzt Python im bestehenden Grafana-Sidecar fuer den internen API-Zugriff;
+Zugangsdaten bleiben im Speicher bzw. Secret. Es startet noch keine Last.
+Am 27.09. wurde diese Vorbereitung erfolgreich ausgefuehrt.
 
 ```powershell
-kubectl -n user-mgmt-staging create configmap user-mgmt-loadtest --from-file=test.js=loadtest/test.js --dry-run=client -o yaml | kubectl apply -f -
-kubectl apply -f loadtest/job.yaml
-kubectl -n user-mgmt-staging logs -f job/user-mgmt-loadtest
-kubectl -n user-mgmt-staging get hpa,pods -w
+.\scripts\Prepare-StagingLoadTest.ps1
+kubectl --context do-fra1-vsc-orchestrierung apply -f loadtest/job.yaml
+kubectl --context do-fra1-vsc-orchestrierung -n user-mgmt-staging logs -f job/user-mgmt-loadtest --pod-running-timeout=120s
+# In einem zweiten Terminal die Skalierung beobachten:
+kubectl --context do-fra1-vsc-orchestrierung -n user-mgmt-staging get hpa,pods -w
 ```
 
 Das Skript lastet den Login als echten API-Endpunkt aus: 2 -> 10 -> 20 -> 0 VUs.
@@ -167,6 +178,9 @@ Es prueft erfolgreiche Logins, <1% HTTP-Fehler und P95 <3 Sekunden.
 HPA-Ausgangswert, Maximum und Rueckgang zeitgestempelt festhalten, ebenso k6-Ergebnis
 und Grafana-Zeitraum. Lasthoehe nur anhand der Beobachtung anpassen. Ein vorhandenes
 Skript allein belegt noch keine erfolgreiche Skalierung.
+Der Job hat keine automatischen Wiederholungen und endet spaetestens nach acht
+Minuten. Vor einer Wiederholung zuerst Ergebnis/Logs sichern und den beendeten
+Job gezielt entfernen; das Vorbereitungsskript ueberschreibt keinen bestehenden Job.
 
 ## Lokale Validierung
 

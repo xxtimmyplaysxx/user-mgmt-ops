@@ -22,6 +22,13 @@ und PV sind entfernt. DigitalOcean bestaetigt die Entfernung der vorab exakt
 identifizierten Volume-ID mit HTTP 404. Staging-Deployments Ready, beide Argo-CD-
 Anwendungen Healthy. Aufgabe 4 fuer Staging abgeschlossen; Details im Migrationsnachweis.
 
+16:35-16:47 Uhr: Kyverno installiert, vier Controller Ready, drei Enforce-Policies
+fuer Staging aktiv. Ungueltiges Deployment durch alle drei Policies abgelehnt;
+zwoelf Admission-Gegenproben bestanden, ebenso die drei aktuellen Helm-Deployments.
+Aufgabe 5 nachgewiesen: [Kyverno-Admission](kyverno-admission.md).
+Lasttest-Benutzer/Secret und ConfigMap vorbereitet, k6-Job nur im Server-Dry-Run
+geprueft. Noch kein Lasttest gestartet.
+
 ## Aufgabe 3: Import nach Freigabe erfolgreich
 
 Der Eigentuemer hat bestaetigt, dass Pruefung 2 abgeschlossen ist. generated.tf
@@ -151,7 +158,6 @@ Ausstehend (NICHT als bestanden behauptet):
 - RED-Dashboard-Pruefung. Anwendungs-Scrape-Targets, Request-Counter,
   Duration-Histogramme, Alarmempfang und Entwarnung sind nachgewiesen.
 - k6-Lauf, HPA scale-out/scale-in und Verfuegbarkeit.
-- Kyverno-Admission-Ablehnung.
 - Live-Ausfalltests zum Module-Service. Kompletter E2E nach PostgreSQL-Umschaltung,
   TLS zu beiden Managed-Datenbanken und der GitOps-Rollout sind nachgewiesen.
 
