@@ -62,12 +62,11 @@ Die Zugangsdaten wurden nur im Pod aus vorhandenen Secret-Umgebungsvariablen
 gelesen und nicht ausgegeben. Dashboard-ConfigMaps und Alert-Receiver entsprechen
 den Dateien unter monitoring/.
 
-## Noch offen
+## Weitere Tests
 
-Die neuen Anwendungs-Images und deren ServiceMonitors sind noch nicht ausgerollt.
-Daher belegt dieser Nachweis Infrastruktur-Messwerte und Dashboard-Provisionierung,
-noch keine User-/Module-RED-Messwerte. Ein ausgeloester und zugestellter Testalarm,
-Lasttest und HPA-Skalierung muessen separat nachgewiesen werden.
+Dieser Installationslauf pruefte Infrastruktur-Messwerte und Dashboard-Provisionierung.
+Nach dem Anwendungs-Rollout wurden auch die [RED-Abfragen und HPA-Skalierung](loadtest-passed.md)
+sowie die [Alarmzustellung und Entwarnung](alert-delivery.md) geprueft.
 
 ## Grafana-Speicherlimit korrigiert (15:19 Uhr)
 
@@ -95,7 +94,5 @@ Verifikation ueber einen temporaeren lokalen Port-Forward auf Port 13000:
 - Alle drei VSC-Dashboards nach dem Rollout erneut ueber die Grafana-API gefunden.
 - Staging und Production weiterhin Synced/Healthy.
 
-Der Test-Port-Forward wurde anschliessend beendet. Der Benutzer startet seinen
-Port-Forward auf Port 3000 neu und laedt die Browserseite mit Strg+F5 erneut.
-Das Ergebnis belegt diese Abrufe; langfristiger Verbrauch unter Last wird bei den
-weiteren Tests beobachtet.
+Der temporaere Test-Port-Forward wurde anschliessend beendet.
+Der regulaere Zugriff auf Grafana ist in der [Betriebsanleitung](../BETRIEB.md) beschrieben.

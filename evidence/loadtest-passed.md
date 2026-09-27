@@ -18,10 +18,8 @@ unter [loadtest-first-run.md](loadtest-first-run.md) dokumentiert.
 | Virtuelle Benutzer | Rampe 2 -> 10 -> 20 -> 0 |
 | Alle vier k6-Grenzwerte | Bestanden |
 
-Die beobachtete HTTP-Erfolgsrate betraegt 100% fuer diesen konkreten Lauf. Das ist
-keine Verfuegbarkeitsgarantie fuer andere Lastprofile oder einen laengeren Zeitraum.
-Die Passwortpruefung bleibt unveraendert Argon2; der Test benutzt weiterhin den
-echten Login-Endpunkt und Managed PostgreSQL. Es gibt keinen gemockten Erfolgsweg.
+Der Test verwendet den Login-Endpunkt mit Argon2-Passwortpruefung und Managed
+PostgreSQL. Die Ergebnisse beziehen sich auf den fuenfminuetigen Lauf mit bis zu 20 VUs.
 
 ## Zeitlicher Nachweis von Scale-out und Scale-in
 
@@ -94,6 +92,5 @@ Spring Security verarbeitet den Login vor dem MVC-Controller und liefert deshalb
 auch diese Logins. Ein Filter ausschliesslich auf `uri="/users/login"` wuerde
 die Messungen faelschlich ausblenden. Diese Eigenschaft ist bewusst dokumentiert.
 
-Die technische Dashboard-Pruefung erfolgte ueber APIs und echte Abfragen; das
-obige Diagramm ist kein Grafana-Screenshot. Die getrennte Browser-Sitzung hatte
-keine Grafana-Anmeldung.
+Die Dashboards wurden ueber die Grafana-API und ihre PromQL-Abfragen geprueft.
+Das Diagramm wurde aus den gespeicherten Prometheus-Messwerten erstellt.

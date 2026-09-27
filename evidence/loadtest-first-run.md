@@ -1,4 +1,7 @@
-# Erster k6-Lauf: Fehler gefunden, noch kein bestandener Nachweis
+# Erster k6-Lauf: Heap-Fehler und Korrektur
+
+Der erste Lauf schlug fehl. Nach der unten beschriebenen Korrektur bestand der
+[Wiederholungstest](loadtest-passed.md) mit 3282 erfolgreichen Logins.
 
 27.09.2026, Jobstart 16:48:05, k6 ca. 16:48:10-16:53:13 Europe/Zurich.
 Namespace `user-mgmt-staging`, Job `user-mgmt-loadtest`, Pod
@@ -67,9 +70,9 @@ Der HPA stand waehrend des Tests auf zwei Replikas. Ein zweiter Pod wurde bereit
 vor Jobstart angefordert; der erste Lauf ist deshalb auch kein sauber isolierter
 Nachweis fuer durch k6 ausgeloestes Scale-out und anschliessendes Scale-in.
 
-## Vorbereitete Korrektur und naechste Abnahme
+## Korrektur
 
-Ausschliesslich Staging erhaelt:
+In Staging wurden folgende Einstellungen angepasst:
 
 - Heap initial 128 MiB / maximal 256 MiB im weiterhin 512-MiB-Container;
   `ExitOnOutOfMemoryError` beendet einen bei erneutem Heapmangel defekten Prozess.
@@ -90,7 +93,7 @@ Container-JVM akzeptiert die vorgeschlagenen Flags und meldet 256 MiB MaxHeapSiz
 
 ## Korrektur ausgerollt, 17:06-17:08 Uhr
 
-Der Eigentuemer hat Ops PR 5 gemergt; main steht auf
+Ops PR 5 wurde gemergt; die Revision lautet
 `b8bd1dedc903cec87cbc1ca3e8cb3f7104c1bd9a`. Argo CD hat diese Revision synchronisiert,
 `kubectl rollout status` ist erfolgreich. Das neue Backend-ReplicaSet heisst
 `user-mgmt-backend-7f5548cc65`. Live-Konfiguration enthaelt die oben genannten
@@ -108,8 +111,8 @@ Die Ausgangslage fuer die Wiederholung ist damit dokumentiert.
 
 Der erste fehlgeschlagene Job wurde erst nach Sicherung der vollstaendigen Logs
 und Job-Metadaten sowie Pruefung von UID und Failed-Status entfernt. Die ConfigMap
-ist aktualisiert, das Secret wird wiederverwendet. Der vorbereitete neue Job
-wurde nur per Server-Dry-Run geprueft; der zweite Lasttest hat noch nicht begonnen.
+war aktualisiert, das Secret wurde wiederverwendet. Der neue Job wurde vor
+seinem Start per Server-Dry-Run geprueft.
 
 Beim ersten Cleanup-Versuch war der Kyverno-Webhook kurz nicht erreichbar.
 Der einzelne Admission-Controller hatte nach fehlgeschlagener Lease-Erneuerung
@@ -118,5 +121,6 @@ und Admission wieder; alle vier Controller waren Ready. Policies wurden nicht
 umgangen. Dies zeigt die bereits dokumentierte Einschraenkung der Kursinstallation
 mit nur einer Admission-Replik.
 
-**Der erfolgreiche Wiederholungstest steht noch aus.** Erfolgsrate, Antwortzeiten,
-Restarts, CPU/RAM sowie Scale-out UND Scale-in erneut messen und dokumentieren.
+Die Wiederholung lief von 17:10 bis 17:15 Uhr. Alle Grenzwerte bestanden;
+der HPA skalierte anschliessend wieder auf eine Replika zurueck.
+[Ergebnisse und Messkurven](loadtest-passed.md).
