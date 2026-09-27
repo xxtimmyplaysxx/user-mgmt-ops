@@ -1,8 +1,8 @@
 images:
   backend:
-    tag: 6dc2a1d6e40eac371532dffbff4d24b6865a4c32
+    tag: 792111a863302b1153aba0ba5b64d1647e5683bc
   frontend:
-    tag: 6dc2a1d6e40eac371532dffbff4d24b6865a4c32
+    tag: 792111a863302b1153aba0ba5b64d1647e5683bc
 replicas:
   backend: 1
   frontend: 1
@@ -62,7 +62,7 @@ managedDatabase:
 module:
   enabled: true
   image:
-    tag: 6dc2a1d6e40eac371532dffbff4d24b6865a4c32
+    tag: 792111a863302b1153aba0ba5b64d1647e5683bc
   databaseCidr: 10.114.0.5/32
 monitoring:
   enabled: true
