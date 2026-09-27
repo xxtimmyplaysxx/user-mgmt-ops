@@ -18,11 +18,11 @@ Live-E2E-Lauf fand einen HTTP-Fehlerstatus-Bug. Dieser ist mit Application-PR 3
 behoben; die Wiederholung besteht alle sechs HTTP-Testfaelle nach erfolgreicher
 Registrierung/Anmeldung. Siehe [Rollout-Nachweis](evidence/module-rollout.md).
 
-**Dieser Branch entfernt die nicht mehr verwendete Staging-PostgreSQL samt PVC.**
-Die Anwendung ist erfolgreich auf Managed PostgreSQL umgeschaltet; auch der
-anschliessende Live-E2E besteht alle sechs Faelle. Die lokale Quell-Sicherung
-ist verifiziert. Der alte PV hat die ReclaimPolicy Delete und wird bei diesem
-Schritt ebenfalls freigegeben. Production bleibt in ihrer bestehenden Konfiguration.
+**Die Staging-PostgreSQL-Migration ist abgeschlossen.** Die Anwendung verwendet
+Managed PostgreSQL; auch der anschliessende Live-E2E besteht alle sechs Faelle.
+Alte Staging-DB, Service, Netzwerkregel, PVC, PV und Cloud-Volume sind entfernt.
+Die lokale Quell-Sicherung ist verifiziert. Production bleibt in ihrer bestehenden
+Konfiguration. Kyverno- und Lasttest-Nachweise folgen als naechste Aufgaben.
 [Nachweis](evidence/postgres-final-copy.md),
 [Ablauf und Rueckweg](evidence/postgres-cutover-runbook.md).
 
@@ -37,7 +37,7 @@ privaten Verbindungen erreichbar; ihre Zugangsdaten kommen aus Secrets.
 | 1 Observability | Stack, CPU/RAM-/HTTP-Metriken, 3 Dashboards; echter Alarm und Entwarnung beim Webhook empfangen | RED-Dashboards pruefen |
 | 2 Lasttest | k6-Skript, Job und Netzwerkregeln | Testlauf, HPA scale-out und scale-in, Verfuegbarkeit und Diagramme |
 | 3 IaC | Provider, generierte/bereinigte Konfiguration, Variablen, Import und No-change-Plan erfolgreich | Erledigt; State lokal erhalten |
-| 4 Managed PostgreSQL | Frische Datenkopie, Datenvergleich, Umschaltung, echte JDBC-TLS-Verbindungen und E2E erfolgreich | Alte DB/PVC nach diesem Merge tatsaechlich entfernt nachweisen |
+| 4 Managed PostgreSQL | Datenkopie, Vergleich, Umschaltung, JDBC-TLS/E2E und Entfernung von Quell-DB/PVC/Cloud-Volume nachgewiesen | Erledigt fuer Staging |
 | 5 Kyverno | Helm-values, 3 Enforce-Policies, ungueltiges Deployment | Installation und dokumentierte Admission-Ablehnung |
 | 6 Microservices | REST-Client mit Resilienz, CI/GitOps-Rollout, Metriken und Managed MySQL/TLS live, alle sechs Live-E2E-Faelle auch nach PostgreSQL-Umschaltung bestanden | Ausfallfaelle und Laststabilitaet |
 
@@ -139,10 +139,10 @@ abwaertskompatibel (postgres an, neue Funktionen aus).
 
 ```powershell
 helm repo add kyverno https://kyverno.github.io/kyverno/
-helm upgrade --install kyverno kyverno/kyverno --version 3.9.1 -n policy --create-namespace -f policy/values.yaml --wait --timeout 10m
-kubectl apply -f policy/policies.yaml
-kubectl label namespace user-mgmt-staging vsc-policies=enforce --overwrite
-kubectl apply --dry-run=server -f policy/invalid-deployment.yaml
+helm upgrade --install kyverno kyverno/kyverno --version 3.9.1 --kube-context do-fra1-vsc-orchestrierung -n policy --create-namespace -f policy/values.yaml --wait --timeout 10m
+kubectl --context do-fra1-vsc-orchestrierung apply -f policy/policies.yaml
+kubectl --context do-fra1-vsc-orchestrierung label namespace user-mgmt-staging vsc-policies=enforce --overwrite
+kubectl --context do-fra1-vsc-orchestrierung apply --dry-run=server -f policy/invalid-deployment.yaml
 ```
 
 Die letzte Zeile MUSS abgelehnt werden. Drei Policies verlangen Requests/Limits,

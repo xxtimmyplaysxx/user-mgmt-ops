@@ -17,6 +17,11 @@ erneut erfolgreich. Beide Anwendungen Synced/Healthy, Anwendungs-Targets up.
 Entwarnung bereits um 16:25:42 beim Webhook empfangen. Quelle ohne App-Verbindungen;
 Entfernung der alten Staging-DB/PVC ist als separater Schritt vorbereitet.
 
+16:33 Uhr: Ops PR 4 synchronisiert. Alte Staging-DB, Service, NetworkPolicy, PVC
+und PV sind entfernt. DigitalOcean bestaetigt die Entfernung der vorab exakt
+identifizierten Volume-ID mit HTTP 404. Staging-Deployments Ready, beide Argo-CD-
+Anwendungen Healthy. Aufgabe 4 fuer Staging abgeschlossen; Details im Migrationsnachweis.
+
 ## Aufgabe 3: Import nach Freigabe erfolgreich
 
 Der Eigentuemer hat bestaetigt, dass Pruefung 2 abgeschlossen ist. generated.tf
@@ -143,7 +148,6 @@ Lesend am bestehenden Cluster festgestellt:
 - Zu Beginn noch keine Managed-Datenbanken vorhanden; Erstellung siehe oben.
 
 Ausstehend (NICHT als bestanden behauptet):
-- Quell-DB/PVC-Entfernung. Finaler Datenabgleich und Managed-PG-Umschaltung bestanden.
 - RED-Dashboard-Pruefung. Anwendungs-Scrape-Targets, Request-Counter,
   Duration-Histogramme, Alarmempfang und Entwarnung sind nachgewiesen.
 - k6-Lauf, HPA scale-out/scale-in und Verfuegbarkeit.
