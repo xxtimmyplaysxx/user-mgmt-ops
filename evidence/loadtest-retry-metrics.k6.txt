@@ -1,0 +1,47 @@
+THRESHOLDS 
+
+    business_success
+    ✓ 'rate>0.99' rate=100.00%
+
+    http_req_duration
+    ✓ 'p(95)<3000' p(95)=1.06s
+
+      {expected_response:true}
+      ✓ 'p(95)<3000' p(95)=1.06s
+
+    http_req_failed
+    ✓ 'rate<0.01' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 3282    10.934379/s
+    checks_succeeded...: 100.00% 3282 out of 3282
+    checks_failed......: 0.00%   0 out of 3282
+
+    ✓ login succeeds
+
+    CUSTOM
+    business_success...............: 100.00% 3282 out of 3282
+
+    HTTP
+    http_req_duration..............: avg=383.04ms min=47.26ms  med=225.88ms max=2.82s p(90)=891.12ms p(95)=1.06s
+      { expected_response:true }...: avg=383.04ms min=47.26ms  med=225.88ms max=2.82s p(90)=891.12ms p(95)=1.06s
+    http_req_failed................: 0.00%   0 out of 3282
+    http_reqs......................: 3282    10.934379/s
+
+    EXECUTION
+    iteration_duration.............: avg=884.62ms min=548.42ms med=727.41ms max=3.32s p(90)=1.39s    p(95)=1.57s
+    iterations.....................: 3282    10.934379/s
+    vus............................: 1       min=1            max=20
+    vus_max........................: 20      min=20           max=20
+
+    NETWORK
+    data_received..................: 2.0 MB  6.6 kB/s
+    data_sent......................: 886 kB  3.0 kB/s
+
+
+
+
+running (5m00.2s), 00/20 VUs, 3282 complete and 0 interrupted iterations
+default ✓ [ 100% ] 00/20 VUs  5m0s

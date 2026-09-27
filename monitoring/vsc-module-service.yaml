@@ -39,7 +39,7 @@ data:
             {
               "refId": "A",
               "expr": "sum(rate(module_http_requests_total{namespace=\"user-mgmt-staging\"}[2m]))",
-              "legendFormat": "{{pod}} {{route}}"
+              "legendFormat": "Module Service"
             }
           ],
           "fieldConfig": {
@@ -67,7 +67,7 @@ data:
             {
               "refId": "A",
               "expr": "histogram_quantile(0.95,sum by (le) (rate(module_http_request_duration_seconds_bucket{namespace=\"user-mgmt-staging\"}[2m])))",
-              "legendFormat": "{{pod}} {{route}}"
+              "legendFormat": "Module Service"
             }
           ],
           "fieldConfig": {
@@ -94,8 +94,8 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "sum(rate(module_http_requests_total{namespace=\"user-mgmt-staging\",status=~\"5..\"}[2m])) / clamp_min(sum(rate(module_http_requests_total{namespace=\"user-mgmt-staging\"}[2m])),0.001)",
-              "legendFormat": "{{pod}} {{route}}"
+              "expr": "(sum(rate(module_http_requests_total{namespace=\"user-mgmt-staging\",status=~\"5..\"}[2m])) or (0 * sum(rate(module_http_requests_total{namespace=\"user-mgmt-staging\"}[2m])))) / clamp_min(sum(rate(module_http_requests_total{namespace=\"user-mgmt-staging\"}[2m])),0.001)",
+              "legendFormat": "Module Service"
             }
           ],
           "fieldConfig": {
