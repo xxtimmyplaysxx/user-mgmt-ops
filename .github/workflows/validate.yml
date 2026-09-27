@@ -1,0 +1,35 @@
+name: Validate course infrastructure
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4.3.1
+        with:
+          version: v3.18.6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install PyYAML==6.0.3
+      - name: Validate both existing environments and the managed variant
+        run: |
+          helm lint charts/user-mgmt -f charts/user-mgmt/values-staging.yaml
+          helm lint charts/user-mgmt -f charts/user-mgmt/values-prod.yaml
+          helm template user-mgmt charts/user-mgmt -n user-mgmt-staging -f charts/user-mgmt/values-staging.yaml --set monitoring.enabled=true --set module.enabled=true --set module.databaseCidr=10.0.0.2/32 --set managedDatabase.enabled=true --set managedDatabase.cidr=10.0.0.3/32 --set postgres.enabled=false > /tmp/rendered.yaml
+          python scripts/check-render.py /tmp/rendered.yaml
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.16.2
+      - run: terraform -chdir=terraform fmt -check -recursive
+      - name: Validate import configuration syntax
+        run: |
+          terraform -chdir=terraform init -backend=false -input=false
+          # A resource is generated during the first authorized import plan.
+          if test -f terraform/generated.tf; then
+            terraform -chdir=terraform validate
+          else
+            echo 'Cluster generation/import pending; full validation not yet possible.'
+          fi

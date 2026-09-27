@@ -1,0 +1,17 @@
+# Expected admission rejection; use --dry-run=server to demonstrate without creating it.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deliberately-invalid
+  namespace: user-mgmt-staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: deliberately-invalid }
+  template:
+    metadata:
+      labels: { app: deliberately-invalid }
+    spec:
+      containers:
+        - name: invalid
+          image: nginx:latest

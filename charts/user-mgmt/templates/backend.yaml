@@ -24,8 +24,15 @@ spec:
         {{- include "user-mgmt.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: backend
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        seccompProfile: { type: RuntimeDefault }
       containers:
         - name: backend
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: [ALL] }
           image: "{{ .Values.images.backend.repository }}:{{ .Values.images.backend.tag }}"
           imagePullPolicy: {{ .Values.images.backend.pullPolicy }}
           ports:
@@ -36,6 +43,16 @@ spec:
                 name: {{ include "user-mgmt.fullname" . }}-config
             - secretRef:
                 name: {{ include "user-mgmt.secretName" . }}
+            {{- if .Values.managedDatabase.enabled }}
+            - secretRef:
+                name: {{ .Values.managedDatabase.secretName }}
+            {{- end }}
+          {{- if .Values.managedDatabase.enabled }}
+          volumeMounts:
+            - name: postgres-ca
+              mountPath: /etc/postgres-tls
+              readOnly: true
+          {{- end }}
           resources:
             {{- toYaml .Values.resources.backend | nindent 12 }}
           startupProbe:
@@ -48,12 +65,22 @@ spec:
           readinessProbe:
             httpGet: { path: /actuator/health/readiness, port: http }
             periodSeconds: 5
+      {{- if .Values.managedDatabase.enabled }}
+      volumes:
+        - name: postgres-ca
+          secret:
+            secretName: {{ .Values.managedDatabase.secretName }}
+            items:
+              - key: ca.crt
+                path: ca.crt
+      {{- end }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "user-mgmt.fullname" . }}-backend
   labels:
+    app.kubernetes.io/component: backend
     {{- include "user-mgmt.labels" . | nindent 4 }}
 spec:
   selector:

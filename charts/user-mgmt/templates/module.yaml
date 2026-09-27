@@ -1,0 +1,88 @@
+{{- if .Values.module.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "user-mgmt.fullname" . }}-module
+  labels:
+    {{- include "user-mgmt.labels" . | nindent 4 }}
+    app.kubernetes.io/component: module
+spec:
+  replicas: 1
+  strategy:
+    rollingUpdate: { maxUnavailable: 0, maxSurge: 1 }
+  selector:
+    matchLabels:
+      {{- include "user-mgmt.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: module
+  template:
+    metadata:
+      labels:
+        {{- include "user-mgmt.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: module
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        seccompProfile: { type: RuntimeDefault }
+      initContainers:
+        - name: schema
+          image: "{{ .Values.module.image.repository }}:{{ .Values.module.image.tag }}"
+          command: [python, -m, app.initialize]
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: [ALL] }
+          envFrom:
+            - secretRef:
+                name: {{ .Values.module.secretName }}
+          env:
+            - { name: MYSQL_SSL_DISABLED, value: "false" }
+            - { name: MYSQL_SSL_CA, value: /etc/mysql-tls/ca.crt }
+          volumeMounts:
+            - { name: mysql-ca, mountPath: /etc/mysql-tls, readOnly: true }
+          resources:
+            {{- toYaml .Values.module.resources | nindent 12 }}
+      containers:
+        - name: module
+          image: "{{ .Values.module.image.repository }}:{{ .Values.module.image.tag }}"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: [ALL] }
+          ports: [{ name: http, containerPort: 8080 }]
+          envFrom:
+            - secretRef:
+                name: {{ .Values.module.secretName }}
+          env:
+            - { name: MYSQL_SSL_DISABLED, value: "false" }
+            - { name: MYSQL_SSL_CA, value: /etc/mysql-tls/ca.crt }
+          volumeMounts:
+            - { name: mysql-ca, mountPath: /etc/mysql-tls, readOnly: true }
+          resources:
+            {{- toYaml .Values.module.resources | nindent 12 }}
+          startupProbe:
+            httpGet: { path: /health/live, port: http }
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet: { path: /health/ready, port: http }
+            timeoutSeconds: 6
+          livenessProbe:
+            httpGet: { path: /health/live, port: http }
+      volumes:
+        - name: mysql-ca
+          secret:
+            secretName: {{ .Values.module.secretName }}
+            items: [{ key: ca.crt, path: ca.crt }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "user-mgmt.fullname" . }}-module
+  labels:
+    {{- include "user-mgmt.labels" . | nindent 4 }}
+    app.kubernetes.io/component: module
+spec:
+  selector:
+    {{- include "user-mgmt.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: module
+  ports: [{ name: http, port: 8080, targetPort: http }]
+{{- end }}

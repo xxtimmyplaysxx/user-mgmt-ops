@@ -1,0 +1,109 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vsc-module-service
+  namespace: monitoring
+  labels:
+    grafana_dashboard: '1'
+data:
+  vsc-module-service.json: |
+    {
+      "uid": "vsc-module-service",
+      "title": "VSC - Module Service RED",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "10s",
+      "time": {
+        "from": "now-30m",
+        "to": "now"
+      },
+      "tags": [
+        "VSC"
+      ],
+      "panels": [
+        {
+          "id": 1,
+          "type": "timeseries",
+          "title": "Request rate",
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(rate(module_http_requests_total{namespace=\"user-mgmt-staging\"}[2m]))",
+              "legendFormat": "{{pod}} {{route}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps"
+            },
+            "overrides": []
+          }
+        },
+        {
+          "id": 2,
+          "type": "timeseries",
+          "title": "P95 response time",
+          "gridPos": {
+            "x": 12,
+            "y": 0,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "histogram_quantile(0.95,sum by (le) (rate(module_http_request_duration_seconds_bucket{namespace=\"user-mgmt-staging\"}[2m])))",
+              "legendFormat": "{{pod}} {{route}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s"
+            },
+            "overrides": []
+          }
+        },
+        {
+          "id": 3,
+          "type": "timeseries",
+          "title": "5xx error ratio",
+          "gridPos": {
+            "x": 0,
+            "y": 8,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(rate(module_http_requests_total{namespace=\"user-mgmt-staging\",status=~\"5..\"}[2m])) / clamp_min(sum(rate(module_http_requests_total{namespace=\"user-mgmt-staging\"}[2m])),0.001)",
+              "legendFormat": "{{pod}} {{route}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit"
+            },
+            "overrides": []
+          }
+        }
+      ]
+    }

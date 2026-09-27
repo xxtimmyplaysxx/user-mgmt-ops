@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alert-receiver
+  namespace: monitoring
+data:
+  server.py: |
+    import json
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+    class Receiver(BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b'OK')
+        def do_POST(self):
+            if self.path != '/alerts':
+                self.send_error(404)
+                return
+            size = int(self.headers.get('Content-Length', '0'))
+            if size > 1048576:
+                self.send_error(413)
+                return
+            try:
+                payload = json.loads(self.rfile.read(size))
+            except ValueError:
+                self.send_error(400)
+                return
+            print(json.dumps(payload), flush=True)
+            self.send_response(200)
+            self.end_headers()
+    HTTPServer(('0.0.0.0', 8080), Receiver).serve_forever()
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alert-receiver
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: alert-receiver }
+  template:
+    metadata:
+      labels: { app: alert-receiver }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: receiver
+          image: python:3.12-slim
+          command: [python, /app/server.py]
+          ports: [{ name: http, containerPort: 8080 }]
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: [ALL] }
+          resources:
+            requests: { cpu: 10m, memory: 32Mi }
+            limits: { cpu: 100m, memory: 64Mi }
+          readinessProbe:
+            httpGet: { path: /, port: http }
+          volumeMounts:
+            - { name: script, mountPath: /app, readOnly: true }
+      volumes:
+        - name: script
+          configMap: { name: alert-receiver }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alert-receiver
+  namespace: monitoring
+spec:
+  selector: { app: alert-receiver }
+  ports: [{ name: http, port: 8080, targetPort: http }]

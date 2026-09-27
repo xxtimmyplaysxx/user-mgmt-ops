@@ -1,0 +1,12 @@
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+!*.tfvars.example
+*.auto.tfvars.json
+*.secret.yaml
+*.dump
+*.sql.gz
+.env
+tmp/
