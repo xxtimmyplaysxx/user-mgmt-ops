@@ -29,7 +29,9 @@ Der Restore ersetzt ausschliesslich den zuvor geprueften, noch unbenutzten
 Teststand in `usermgmt_staging` auf der bekannten Managed-PG-Instanz.
 `pg_restore --clean --if-exists --single-transaction --no-owner --no-acl`
 fasst Loeschungen und Restore in eine Transaktion; ein Restore-Fehler rollt diese
-zurueck. Anschliessend werden Tabellen-/Sequenz-Fingerprints zwischen Quelle und
+zurueck. Anschliessend aktualisiert `ANALYZE` die Planerstatistiken der fuenf
+Anwendungstabellen. PostgreSQL-16-Dumps enthalten diese Statistiken nicht.
+Danach werden Tabellen-/Sequenz-Fingerprints zwischen Quelle und
 Ziel verglichen. Die Wartungsbedingungen werden nochmals geprueft. Quelle und PVC
 werden durch kein Migrationsskript geloescht.
 
@@ -56,3 +58,21 @@ Datenabgleich nicht sicher. Alte Quell-Datenbank und PVC erst nach erfolgreicher
 Abnahme separat entfernen.
 
 Quelle: [PostgreSQL 16 pg_restore](https://www.postgresql.org/docs/16/app-pgrestore.html).
+
+## Nachtrag: Statistiken nach dem Restore
+
+Der Restore von 16:17 Uhr hatte noch kein ANALYZE ausgefuehrt. Um 17:46 Uhr wurde
+dies nachgeholt, nachdem parallele authentifizierte Modulzuweisungen trotz
+funktionierender Verbindung in ein Client-Timeout liefen. Fuenf parallele
+Zuweisungen bestanden danach in 0.115-0.251 Sekunden, ohne Imagewechsel oder
+Neustart. [Diagnose und Ausfalltest](module-resilience.md).
+
+Fuer ein bereits migriertes Staging-Ziel reicht die begrenzte Statistikwartung:
+
+```powershell
+.\scripts\Test-ManagedPostgresConnection.ps1 -AnalyzeTables
+```
+
+Dieser Schalter aktualisiert nur Statistiken, keine Anwendungsdatensaetze. Ohne
+Schalter bleibt die Verbindungspruefung schreibgeschuetzt. Den Restore dafuer
+**nicht** wiederholen. Quelle: [PostgreSQL 16 pg_dump, Hinweise zu Statistiken](https://www.postgresql.org/docs/16/app-pgdump.html).

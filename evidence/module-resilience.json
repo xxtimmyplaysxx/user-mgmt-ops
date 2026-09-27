@@ -1,0 +1,164 @@
+{
+  "context": "do-fra1-vsc-orchestrierung",
+  "namespace": "user-mgmt-staging",
+  "ops_revision": "0f81273af28f59f552cd3b3827ec782a9b22e3b6",
+  "image": "ghcr.io/xxtimmyplaysxx/user-mgmt-backend:fd1e6343585fdf92ba437e929d23cabe1f894133",
+  "initial_pods": {
+    "user-mgmt-backend-7f5548cc65-wgg4s": {
+      "uid": "675e1cb3-e852-4c5d-8726-0c763473f511",
+      "containers": [
+        {
+          "name": "backend",
+          "ready": true,
+          "restarts": 0
+        }
+      ]
+    },
+    "user-mgmt-module-74f4867b86-4r247": {
+      "uid": "7dcbd068-f811-4a9f-b9e8-73d59b6655fa",
+      "containers": [
+        {
+          "name": "module",
+          "ready": true,
+          "restarts": 0
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "stage": "ready",
+      "at": "2026-09-27T15:46:50.551903+00:00",
+      "baseline": [
+        {
+          "status": 204,
+          "seconds": 0.1505
+        },
+        {
+          "status": 204,
+          "seconds": 0.0898
+        },
+        {
+          "status": 204,
+          "seconds": 0.0617
+        }
+      ],
+      "module_requests": 117.0
+    },
+    {
+      "stage": "outage",
+      "at": "2026-09-27T15:46:56.758420+00:00",
+      "failures": [
+        {
+          "status": 503,
+          "seconds": 3.4729
+        },
+        {
+          "status": 503,
+          "seconds": 4.4559
+        },
+        {
+          "status": 503,
+          "seconds": 3.4697
+        },
+        {
+          "status": 503,
+          "seconds": 3.489
+        },
+        {
+          "status": 503,
+          "seconds": 3.479
+        }
+      ],
+      "fast_failures": [
+        {
+          "status": 503,
+          "seconds": 0.0456
+        },
+        {
+          "status": 503,
+          "seconds": 0.0341
+        },
+        {
+          "status": 503,
+          "seconds": 0.0432
+        }
+      ],
+      "login_status": 200,
+      "login_seconds": 0.0764,
+      "backend_readiness": 200,
+      "module_readiness": 200,
+      "module_requests": 117.0
+    },
+    {
+      "stage": "cooldown",
+      "at": "2026-09-27T15:46:58.535365+00:00",
+      "results": [
+        {
+          "status": 503,
+          "seconds": 0.0293
+        },
+        {
+          "status": 503,
+          "seconds": 0.0339
+        },
+        {
+          "status": 503,
+          "seconds": 0.038
+        }
+      ],
+      "module_requests_before": 117.0,
+      "module_requests_after": 117.0
+    },
+    {
+      "stage": "recovery",
+      "at": "2026-09-27T15:47:16.323396+00:00",
+      "results": [
+        {
+          "status": 204,
+          "seconds": 0.1174
+        },
+        {
+          "status": 204,
+          "seconds": 0.0746
+        },
+        {
+          "status": 204,
+          "seconds": 0.0906
+        }
+      ],
+      "module_requests": 123.0
+    },
+    {
+      "stage": "passed",
+      "at": "2026-09-27T15:47:16.323518+00:00"
+    }
+  ],
+  "passed": true,
+  "network_fault_at": "2026-09-27T15:46:51.012067+00:00",
+  "network_restored_at": "2026-09-27T15:46:57.172935+00:00",
+  "autosync_restored_at": "2026-09-27T15:46:57.387298+00:00",
+  "final_pods": {
+    "user-mgmt-backend-7f5548cc65-wgg4s": {
+      "uid": "675e1cb3-e852-4c5d-8726-0c763473f511",
+      "containers": [
+        {
+          "name": "backend",
+          "ready": true,
+          "restarts": 0
+        }
+      ]
+    },
+    "user-mgmt-module-74f4867b86-4r247": {
+      "uid": "7dcbd068-f811-4a9f-b9e8-73d59b6655fa",
+      "containers": [
+        {
+          "name": "module",
+          "ready": true,
+          "restarts": 0
+        }
+      ]
+    }
+  },
+  "ended_at": "2026-09-27T15:47:16.916507+00:00"
+}
