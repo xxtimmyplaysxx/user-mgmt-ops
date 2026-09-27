@@ -11,8 +11,10 @@ beiden Datenbanken und Firewalls sind erstellt; der erneute Plan zeigt keine
 Aenderungen. Beide Worker sind Ready. Das Staging-Backup wurde in Managed
 PostgreSQL wiederhergestellt: TLS 1.3 mit Zertifikatspruefung, fuenf
 Tabellen/Sequenzen stimmen beim Datenvergleich ueberein. Beide DB-Secrets sind
-im Staging-Namespace vorhanden. Die Anwendung nutzt weiterhin die alte Datenbank;
-endgueltige Umschaltung und Anwendungs-Rollout stehen aus.
+im Staging-Namespace vorhanden. Die Anwendung nutzt weiterhin die alte PostgreSQL;
+ihre endgueltige Umschaltung steht aus. Module-Service und Anwendungsmetriken sind
+ausgerollt: beide Scrape-Targets up, MySQL TLS 1.3 mit Zertifikatspruefung. Der erste
+Live-E2E-Lauf fand einen HTTP-Fehlerstatus-Bug; siehe [Rollout-Nachweis](evidence/module-rollout.md).
 
 Die Anwendung einschliesslich des vom Lehrer bereitgestellten Module Service liegt
 in https://github.com/xxtimmyplaysxx/user-mgmt-service-kubernetes auf `main`.
@@ -22,12 +24,12 @@ abschliessenden Datenabgleich und die kontrollierte Umschaltung erhalten.
 
 | Aufgabe | Vorbereitet | Noch praktisch nachzuweisen |
 |---|---|---|
-| 1 Observability | Stack installiert, 18 Infrastruktur-Targets up, CPU/RAM-Messwerte, 3 Dashboards geladen, Webhook-Empfaenger laeuft | Anwendungs-Targets nach Rollout, RED-Messwerte, zugestellter Testalarm |
+| 1 Observability | Stack installiert, Infrastruktur- und Anwendungs-Targets up, CPU/RAM- und HTTP-Metriken, 3 Dashboards geladen, Webhook-Empfaenger laeuft | RED-Dashboards pruefen, zugestellter Testalarm |
 | 2 Lasttest | k6-Skript, Job und Netzwerkregeln | Testlauf, HPA scale-out und scale-in, Verfuegbarkeit und Diagramme |
 | 3 IaC | Provider, generierte/bereinigte Konfiguration, Variablen, Import und No-change-Plan erfolgreich | Erledigt; State lokal erhalten |
 | 4 Managed PostgreSQL | Managed DB/Firewall/Secret erstellt, Backup wiederhergestellt, TLS und Datenvergleich erfolgreich | Schreibzugriffe stoppen, finalen Datenstand uebernehmen, umstellen, alte DB/PVC entfernen |
 | 5 Kyverno | Helm-values, 3 Enforce-Policies, ungueltiges Deployment | Installation und dokumentierte Admission-Ablehnung |
-| 6 Microservices | REST-Client mit Resilienz, Module-Service-Image, CI, Helm, Metriken, Managed MySQL und Secret erstellt | GitOps-Rollout, E2E inkl. Fehlerfaellen und Laststabilitaet |
+| 6 Microservices | REST-Client mit Resilienz, CI/GitOps-Rollout, Metriken und Managed MySQL/TLS live, Modulzuweisung erfolgreich | HTTP-Fehlerstatus-Korrektur ausrollen, vollstaendiger E2E inkl. Ausfallfaellen und Laststabilitaet |
 
 ## Vorhandene Umgebung
 
@@ -65,8 +67,8 @@ kubectl --context do-fra1-vsc-orchestrierung -n monitoring port-forward svc/moni
 
 Live-Installation und Behebung des CRD-Timeouts: [Nachweis](evidence/monitoring-installation.md).
 Die drei VSC-Dashboards wurden ueber die Grafana-API nachgewiesen. Das
-Infrastruktur-Dashboard hat bereits Messwerte; die RED-Dashboards benoetigen den
-noch ausstehenden Anwendungs-Rollout und die ServiceMonitors.
+Infrastruktur-Dashboard hat bereits Messwerte; beide Anwendungs-ServiceMonitors
+sind inzwischen aktiv und liefern HTTP-Counter und Histogramme fuer die RED-Dashboards.
 
 Der konfigurierte Benachrichtigungskanal ist ein interner HTTP-Webhook, dessen
 Empfang mit `kubectl -n monitoring logs deploy/alert-receiver` nachgewiesen wird.

@@ -81,6 +81,13 @@ Details und Testumfang in monitoring-installation.md.
 
 ## Anwendungs-Images und naechster Staging-Rollout
 
+Aktualisierung 15:55 Uhr: Ops PR 1 ist gemergt; alle vier Staging-Deployments sind
+Ready. Module-Service mit Managed MySQL/TLS 1.3 sowie beide Anwendungs-Scrape-Targets
+sind verifiziert. Live-E2E hat bei einem fehlenden Modul einen falschen HTTP-Status
+aufgedeckt (403 statt 404); Korrektur und Wiederholung stehen aus.
+Details: [Module-Rollout](module-rollout.md). Die folgende Chronologie beschreibt
+auch fruehere Zwischenstaende.
+
 - Application-PR 1 vom Eigentuemer gemergt; main-Commit
   `6c932b34bb69f1d3af03ca5529b887874d9b6112`.
 - GitHub-Run 36322414461: Java/Python-Tests sowie Build/Push aller drei Images
@@ -120,12 +127,12 @@ Lesend am bestehenden Cluster festgestellt:
 Ausstehend (NICHT als bestanden behauptet):
 - Finaler Datenabgleich bei gestoppten Schreibzugriffen und Anwendungs-Umschaltung
   auf die erstellten Managed-Datenbanken.
-- Anwendungs-Scrape-Targets und RED-Dashboard-Messwerte nach GitOps-Rollout sowie
-  tatsaechlicher Alert-Empfang (Infrastruktur-Monitoring ist bereits geprueft).
+- RED-Dashboard-Pruefung und tatsaechlicher Alert-Empfang. Anwendungs-Scrape-Targets,
+  Request-Counter und Duration-Histogramme sind inzwischen nachgewiesen.
 - k6-Lauf, HPA scale-out/scale-in und Verfuegbarkeit.
 - Kyverno-Admission-Ablehnung.
-- Live-E2E und Fehlerfaelle einschliesslich TLS zu Managed MySQL.
-- GitOps-Rollout der neuen Images und Status der CI-Builds.
+- Vollstaendiger Live-E2E-Lauf nach HTTP-Fehlerstatus-Korrektur und Ausfalltests.
+  TLS zu Managed MySQL und der GitOps-Rollout sind nachgewiesen.
 
 Nachweise mit Uhrzeit und Commit-SHA ergaenzen. Keine Tokens, Passwoerter,
 JWTs, State-Dateien oder Datenbankinhalte in diese Dokumentation kopieren.
