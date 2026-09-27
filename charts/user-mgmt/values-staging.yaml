@@ -1,8 +1,8 @@
 images:
   backend:
-    tag: fd1e6343585fdf92ba437e929d23cabe1f894133
+    tag: 6dc2a1d6e40eac371532dffbff4d24b6865a4c32
   frontend:
-    tag: fd1e6343585fdf92ba437e929d23cabe1f894133
+    tag: 6dc2a1d6e40eac371532dffbff4d24b6865a4c32
 replicas:
   backend: 1
   frontend: 1
@@ -15,8 +15,8 @@ backendEnv:
   SPRING_JPA_SHOW_SQL: 'false'
 resources:
   backend:
-    requests: { cpu: 250m, memory: 384Mi }
-    limits: { cpu: '1', memory: 512Mi }
+    requests: {cpu: 250m, memory: 384Mi}
+    limits: {cpu: '1', memory: 512Mi}
 backendProbes:
   startup:
     timeoutSeconds: 5
@@ -62,7 +62,7 @@ managedDatabase:
 module:
   enabled: true
   image:
-    tag: fd1e6343585fdf92ba437e929d23cabe1f894133
+    tag: 6dc2a1d6e40eac371532dffbff4d24b6865a4c32
   databaseCidr: 10.114.0.5/32
 monitoring:
   enabled: true
