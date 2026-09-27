@@ -1,7 +1,7 @@
 locals {
   databases = var.enable_databases ? {
     postgres = { engine = "pg", version = "16", name = "vsc-user-postgres" }
-    mysql    = { engine = "mysql", version = "8", name = "vsc-module-mysql" }
+    mysql    = { engine = "mysql", version = "8.4", name = "vsc-module-mysql" }
   } : {}
 }
 
