@@ -10,35 +10,36 @@ abschliessender Plan "No changes". Managed PostgreSQL 16 und MySQL 8.4 sowie die
 beiden Datenbanken und Firewalls sind erstellt; der erneute Plan zeigt keine
 Aenderungen. Beide Worker sind Ready. Das Staging-Backup wurde in Managed
 PostgreSQL wiederhergestellt: TLS 1.3 mit Zertifikatspruefung, fuenf
-Tabellen/Sequenzen stimmen beim Datenvergleich ueberein. Beide DB-Secrets sind
-im Staging-Namespace vorhanden. Die Anwendung nutzt weiterhin die alte PostgreSQL;
-ihre endgueltige Umschaltung steht aus. Module-Service und Anwendungsmetriken sind
-ausgerollt: beide Scrape-Targets up, MySQL TLS 1.3 mit Zertifikatspruefung. Der erste
+Tabellen/Sequenzen stimmen beim Datenvergleich ueberein. Die Anwendung nutzt jetzt
+Managed PostgreSQL; zehn echte JDBC-Verbindungen mit TLS 1.3 sind nachgewiesen.
+Module-Service und Anwendungsmetriken sind ausgerollt: beide Scrape-Targets up,
+MySQL TLS 1.3 mit Zertifikatspruefung. Der erste
 Live-E2E-Lauf fand einen HTTP-Fehlerstatus-Bug. Dieser ist mit Application-PR 3
 behoben; die Wiederholung besteht alle sechs HTTP-Testfaelle nach erfolgreicher
 Registrierung/Anmeldung. Siehe [Rollout-Nachweis](evidence/module-rollout.md).
 
-**Dieser Branch beendet die Staging-Wartung und aktiviert Managed PostgreSQL.**
-Der frische Datenabgleich bei gestopptem Backend war erfolgreich: alle fuenf
-Tabellen-/Sequenz-Fingerprints stimmen ueberein, TLS 1.3 mit Zertifikatspruefung.
-Die Quelle bleibt bis zur erfolgreichen Anwendungspruefung erhalten.
+**Dieser Branch entfernt die nicht mehr verwendete Staging-PostgreSQL samt PVC.**
+Die Anwendung ist erfolgreich auf Managed PostgreSQL umgeschaltet; auch der
+anschliessende Live-E2E besteht alle sechs Faelle. Die lokale Quell-Sicherung
+ist verifiziert. Der alte PV hat die ReclaimPolicy Delete und wird bei diesem
+Schritt ebenfalls freigegeben. Production bleibt in ihrer bestehenden Konfiguration.
 [Nachweis](evidence/postgres-final-copy.md),
 [Ablauf und Rueckweg](evidence/postgres-cutover-runbook.md).
 
 Die Anwendung einschliesslich des vom Lehrer bereitgestellten Module Service liegt
 in https://github.com/xxtimmyplaysxx/user-mgmt-service-kubernetes auf `main`.
-Die Staging-values dieses Ops-Branches aktivieren zunaechst den Module-Service
-mit Managed MySQL und die Anwendungsmetriken. Die alte PostgreSQL bleibt fuer den
-abschliessenden Datenabgleich und die kontrollierte Umschaltung erhalten.
+Staging betreibt den User-Service mit Managed PostgreSQL, den Module-Service mit
+Managed MySQL und die Anwendungsmetriken. Datenbanken sind nur ueber die vorgesehenen
+privaten Verbindungen erreichbar; ihre Zugangsdaten kommen aus Secrets.
 
 | Aufgabe | Vorbereitet | Noch praktisch nachzuweisen |
 |---|---|---|
-| 1 Observability | Stack, CPU/RAM-/HTTP-Metriken, 3 Dashboards; echter Verfuegbarkeitsalarm beim Webhook empfangen | RED-Dashboards pruefen, Alarmaufloesung nach Wartung |
+| 1 Observability | Stack, CPU/RAM-/HTTP-Metriken, 3 Dashboards; echter Alarm und Entwarnung beim Webhook empfangen | RED-Dashboards pruefen |
 | 2 Lasttest | k6-Skript, Job und Netzwerkregeln | Testlauf, HPA scale-out und scale-in, Verfuegbarkeit und Diagramme |
 | 3 IaC | Provider, generierte/bereinigte Konfiguration, Variablen, Import und No-change-Plan erfolgreich | Erledigt; State lokal erhalten |
-| 4 Managed PostgreSQL | Managed DB/Firewall/Secret erstellt; frischer Datenstand bei gestopptem Backend kopiert, TLS und Datenvergleich erfolgreich | Anwendung auf Managed PG starten und pruefen, alte DB/PVC entfernen |
+| 4 Managed PostgreSQL | Frische Datenkopie, Datenvergleich, Umschaltung, echte JDBC-TLS-Verbindungen und E2E erfolgreich | Alte DB/PVC nach diesem Merge tatsaechlich entfernt nachweisen |
 | 5 Kyverno | Helm-values, 3 Enforce-Policies, ungueltiges Deployment | Installation und dokumentierte Admission-Ablehnung |
-| 6 Microservices | REST-Client mit Resilienz, CI/GitOps-Rollout, Metriken und Managed MySQL/TLS live, alle sechs Live-E2E-Faelle bestanden | Ausfallfaelle und Laststabilitaet, E2E nach PostgreSQL-Umschaltung wiederholen |
+| 6 Microservices | REST-Client mit Resilienz, CI/GitOps-Rollout, Metriken und Managed MySQL/TLS live, alle sechs Live-E2E-Faelle auch nach PostgreSQL-Umschaltung bestanden | Ausfallfaelle und Laststabilitaet |
 
 ## Vorhandene Umgebung
 
