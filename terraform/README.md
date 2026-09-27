@@ -7,7 +7,9 @@ prevent_destroy-Lifecycle schuetzt vor geplanter Cluster-Loeschung. fmt und vali
 sind erfolgreich. Nach ausdruecklicher Bestaetigung, dass Pruefung 2 abgeschlossen
 ist, wurde der gespeicherte Importplan angewendet: 1 imported, 0 added, 0 changed,
 0 destroyed. Der anschliessende Plan endete mit Exitcode 0 und "No changes".
-enable_databases bleibt vorerst false; Datenbanken wurden noch nicht angelegt.
+Anschliessend wurden Managed PostgreSQL 16 und MySQL 8.4 angelegt; auch danach
+zeigte der Plan "No changes". Die lokale terraform.tfvars haelt nun
+enable_databases=true fest. Datenmigration und Anwendungskonfiguration stehen aus.
 
 Der Import muss auf diesem Rechner nicht erneut ausgefuehrt werden. Die folgenden
 Schritte dokumentieren den durchgefuehrten Ablauf. Der lokale State gehoert nicht

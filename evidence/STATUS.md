@@ -20,7 +20,24 @@ No changes. Your infrastructure matches the configuration.
 
 Der abschliessende `terraform plan -detailed-exitcode` lieferte Exitcode 0.
 State und Plaene bleiben lokal und sind durch .gitignore ausgeschlossen.
-Datenbanken sind weiterhin deaktiviert (`enable_databases=false`).
+Datenbanken waren bei diesem Import noch deaktiviert (`enable_databases=false`).
+
+## Managed-Datenbanken und Backup
+
+Anschliessend hat der Eigentuemer die Datenbankplaene angewendet. Der erste Lauf
+erstellte PostgreSQL, lehnte aber die alte MySQL-Versionsangabe `8` ab. Die API
+meldete `8.4` als verfuegbare Version. Nach Korrektur erstellte der zweite Lauf die
+fuenf verbleibenden Ressourcen ohne Aenderung/Loeschung vorhandener Ressourcen.
+
+- PostgreSQL 16: `vsc-user-postgres`, Datenbank `usermgmt_staging`.
+- MySQL 8.4: `vsc-module-mysql`, Datenbank `modules`.
+- Beide Firewalls erlauben den bestehenden Kubernetes-Cluster als Trusted Source.
+- Kontrollplan: `No changes`, Exitcode 0.
+- Lokale terraform.tfvars: `enable_databases=true` (nicht in Git).
+- Quell-Backup mit `scripts/Backup-StagingDatabase.ps1`: Custom-Archiv, 8806 Bytes;
+  `pg_restore --list` erfolgreich, SHA256 zwischen Pod und lokaler Kopie identisch.
+- Backup liegt ausschliesslich unter dem ignorierten `tmp/backups/`; keine Inhalte
+  in Git. Wiederherstellung und Datenvergleich sind noch NICHT erfolgt.
 
 Erfolgreich lokal ausgefuehrt:
 - Java Gradle-Tests fuer Module-Client und Controller.
@@ -33,11 +50,11 @@ Erfolgreich lokal ausgefuehrt:
 Lesend am bestehenden Cluster festgestellt:
 - Cluster running; vorhandene Argo-CD-Anwendungen Synced/Healthy.
 - Ein Node; rund 94% der allocatable Memory belegt.
-- Noch keine Managed-Datenbanken vorhanden.
+- Zu Beginn noch keine Managed-Datenbanken vorhanden; Erstellung siehe oben.
 
 Ausstehend (NICHT als bestanden behauptet):
 - Zusaetzliche Clusterkapazitaet fuer die neuen Workloads.
-- Managed PostgreSQL/MySQL und gepruefte Datenmigration.
+- Gepruefte Datenmigration und Umschaltung auf die erstellten Managed-Datenbanken.
 - Monitoring-Installation, Scrape-Targets, Dashboard-Messwerte und Alert-Empfang.
 - k6-Lauf, HPA scale-out/scale-in und Verfuegbarkeit.
 - Kyverno-Admission-Ablehnung.

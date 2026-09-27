@@ -6,7 +6,10 @@ Die bestehende Plattform wird fuer die Aufgaben 1-6 erweitert. **Dieser Branch i
 noch keine vollstaendig nachgewiesene Abgabe.** Pruefung 2 ist laut Bestaetigung des
 Eigentuemers abgeschlossen. Der bestehende Cluster wurde anschliessend erfolgreich
 in Terraform importiert: keine Ressourcen erstellt, geaendert oder geloescht;
-abschliessender Plan "No changes". Datenbanken und Anwendungs-Rollout stehen aus.
+abschliessender Plan "No changes". Managed PostgreSQL 16 und MySQL 8.4 sowie die
+beiden Datenbanken und Firewalls sind erstellt; der erneute Plan zeigt keine
+Aenderungen. Die alte Staging-Datenbank wurde gesichert. Wiederherstellung,
+Umschaltung und Anwendungs-Rollout stehen aus.
 
 Die Anwendung einschliesslich des vom Lehrer bereitgestellten Module Service liegt
 in https://github.com/xxtimmyplaysxx/user-mgmt-service-kubernetes unter dem
@@ -17,9 +20,9 @@ gleichnamigen Branch `codex/observability-microservices`.
 | 1 Observability | Stack-values, 2 ServiceMonitors, 3 Grafana-Dashboards, PrometheusRules, Alertmanager-Webhook | Installation, Scrape-Targets, Daten in Dashboards, zugestellter Alert |
 | 2 Lasttest | k6-Skript, Job und Netzwerkregeln | Testlauf, HPA scale-out und scale-in, Verfuegbarkeit und Diagramme |
 | 3 IaC | Provider, generierte/bereinigte Konfiguration, Variablen, Import und No-change-Plan erfolgreich | Erledigt; State lokal erhalten |
-| 4 Managed PostgreSQL | Terraform-DB/Firewall und Helm-Umschaltung | DB erstellen, Daten sichern/migrieren, umstellen, alte DB/PVC entfernen |
+| 4 Managed PostgreSQL | Managed DB/Firewall erstellt, Quell-Backup geprueft, Helm-Umschaltung vorbereitet | Wiederherstellen, Daten vergleichen, umstellen, alte DB/PVC entfernen |
 | 5 Kyverno | Helm-values, 3 Enforce-Policies, ungueltiges Deployment | Installation und dokumentierte Admission-Ablehnung |
-| 6 Microservices | REST-Client mit Resilienz, Module-Service-Image, CI, Helm, Metriken | Managed MySQL, GitOps-Rollout, E2E inkl. Fehlerfaellen und Laststabilitaet |
+| 6 Microservices | REST-Client mit Resilienz, Module-Service-Image, CI, Helm, Metriken, Managed MySQL erstellt | DB-Secrets, GitOps-Rollout, E2E inkl. Fehlerfaellen und Laststabilitaet |
 
 ## Vorhandene Umgebung
 
