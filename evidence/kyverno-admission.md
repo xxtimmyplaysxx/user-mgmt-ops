@@ -45,7 +45,7 @@ legt jedoch kein Deployment an. Die Abwesenheit des Test-Deployments wurde gepru
 
 Zusaetzlich wurden alle drei aktuellen, mit Helm gerenderten Staging-Deployments
 und der vorbereitete k6-Job per Server-Dry-Run akzeptiert. Kein Test-Workload wurde
-dabei erstellt. Der k6-Test selbst steht noch aus.
+dabei erstellt. Der anschliessende k6-Lauf ist im [Lasttestbericht](loadtest-passed.md) dokumentiert.
 
 Die Hintergrundberichte enthalten auch alte ReplicaSets mit null Replikas und
 den bereits abgeschlossenen `load-generator` aus dem frueheren Unterricht.

@@ -25,11 +25,10 @@ Aus dem JSON-Payload der Receiver-Logs extrahiert (Zeitstempel UTC):
 }
 ```
 
-Damit ist die Kette Metrik -> PrometheusRule -> Alertmanager -> HTTP-Empfaenger
-live nachgewiesen. Der Kanal ist ein interner Webhook, keine E-Mail oder externe
-Chat-Nachricht. Die `resolved`-Meldung wird nach dem Backend-Neustart separat
-geprueft. Die wartungsbedingte Unterbrechung ist kein Nachweis einer fehlgeschlagenen
-Verfuegbarkeitsmessung unter Last; der eigentliche k6-Lauf steht noch aus.
+Die Zustellung verlief ueber Metrik -> PrometheusRule -> Alertmanager -> HTTP-Empfaenger.
+Der Kanal ist ein interner Webhook. Die Entwarnung nach dem Backend-Neustart ist
+unten dokumentiert. Die Verfuegbarkeit unter Last wurde im spaeteren
+[k6-Test](loadtest-passed.md) gemessen.
 
 ```powershell
 kubectl --context do-fra1-vsc-orchestrierung -n monitoring logs deploy/alert-receiver --since=10m --timestamps

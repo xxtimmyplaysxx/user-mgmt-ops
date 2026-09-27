@@ -1,5 +1,10 @@
 # Module-Service-Rollout am 27.09.2026
 
+Der erste Test zeigte einen falschen Fehlerstatus. Nach der Korrektur bestanden
+alle sechs API-Faelle; die Ergebnisse stehen unter [Wiederholung](#wiederholung-mit-korrigiertem-image-erfolgreich).
+
+## Erster Rollout
+
 Geprueft um 15:51-15:55 Uhr (Europe/Zurich).
 
 - Ops PR 1 gemergt: `922031eb071225176caa1b68ee889875f7b18492`.
@@ -17,10 +22,11 @@ Geprueft um 15:51-15:55 Uhr (Europe/Zurich).
   Modulzuweisung HTTP 204 und idempotente Wiederholung HTTP 204.
 - Der Test ist insgesamt **fehlgeschlagen**: fehlendes Modul liefert 403 statt 404.
   Die folgenden Testfaelle wurden durch diesen Abbruch noch nicht ausgefuehrt.
-  Ursache und HTTP-Regressionskorrektur werden im Application-Repository behandelt.
+  Ursache war die erneute Authentifizierung beim internen Servlet-ERROR-Dispatch.
+  Die Korrektur und ein HTTP-Regressionstest liegen im Application-Repository.
 
 Die Requests erreichten das echte Backend, den Module-Service und Managed MySQL.
-PostgreSQL fuer Benutzerdaten ist weiterhin die bisherige Datenbank im Cluster.
+PostgreSQL fuer Benutzerdaten war bei diesem Lauf noch die Datenbank im Cluster.
 Dieser Lauf prueft weder den Browser/Ingress noch die spaetere PostgreSQL-Umschaltung.
 
 Reproduzierbare Lesepruefungen:
@@ -30,8 +36,6 @@ kubectl --context do-fra1-vsc-orchestrierung -n argocd get applications
 kubectl --context do-fra1-vsc-orchestrierung -n user-mgmt-staging get deployments,pods,servicemonitors
 kubectl --context do-fra1-vsc-orchestrierung get --raw '/api/v1/namespaces/monitoring/services/http:monitoring-kube-prometheus-prometheus:9090/proxy/api/v1/targets'
 ```
-
-Ein frischer Live-E2E-Lauf mit dem korrigierten Image ist noch erforderlich.
 
 ## Wiederholung mit korrigiertem Image erfolgreich
 
@@ -56,5 +60,6 @@ erfolgreich geprueft. Alle sechs anschliessenden HTTP-Testfaelle bestanden.
 Der falsche Fehlerstatus ist damit auch im echten Cluster behoben. Die fruehere
 fehlgeschlagene Messung bleibt oben als Fehlernachweis erhalten.
 
-Offen bleiben Ausfall-/Lasttests, Alarmzustellung, Policies und die endgueltige
-PostgreSQL-Migration. Nach der Umschaltung ist dieser E2E-Test nochmals erforderlich.
+Der E2E-Test wurde nach der [PostgreSQL-Migration](postgres-final-copy.md) erneut
+ausgefuehrt und bestanden. Die weiteren Nachweise zu Lasttest, Alarmzustellung,
+Policies und Ausfalltest sind in der [Aufgabenuebersicht](STATUS.md) verlinkt.

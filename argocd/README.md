@@ -1,18 +1,34 @@
-# Argo CD bootstrap
+# Argo CD
 
-These files are prepared locally and must only be applied after the dedicated
-DigitalOcean Kubernetes cluster has been created and its cost has been approved.
+Argo CD läuft im Namespace `argocd` auf dem bestehenden DigitalOcean-Cluster.
+Beide Anwendungen verwenden den Helm-Chart `charts/user-mgmt` aus dem Branch `main`.
 
-1. Create the dedicated namespace:
+| Anwendung | Namespace | Werte |
+|---|---|---|
+| [Staging](application-staging.yaml) | `user-mgmt-staging` | `values-staging.yaml` |
+| [Production](application-production.yaml) | `user-mgmt-production` | `values-prod.yaml` |
 
-   `kubectl create namespace argocd`
+`CreateNamespace` legt bei Bedarf den Ziel-Namespace an.
+`selfHeal` korrigiert Abweichungen vom Git-Stand; `prune` entfernt Ressourcen,
+die nicht mehr in den gerenderten Manifesten enthalten sind.
+Das betrifft auch PVCs, wenn sie aus dem Chart entfernt werden.
 
-2. Install the course-approved Argo CD release into `argocd`.
-3. Replace all `example.com` hosts with the real DNS names.
-4. Make the GitHub Container Registry packages public or configure an image pull secret.
-5. Apply `application-staging.yaml` and `application-production.yaml`.
-6. Verify both applications with `kubectl get applications -n argocd`.
+Die CI-Pipeline des Application-Repositories aktualisiert nur die Staging-Image-Tags.
+Die Production-Tags bleiben in ihrer eigenen Werte-Datei festgelegt.
 
-For a safe local dashboard connection without public exposure:
+## Anwendungen und Status
 
-`kubectl port-forward service/argocd-server -n argocd 8080:443`
+Bei bereits installiertem Argo CD:
+
+```powershell
+kubectl --context do-fra1-vsc-orchestrierung apply -f argocd/application-staging.yaml -f argocd/application-production.yaml
+kubectl --context do-fra1-vsc-orchestrierung -n argocd get applications
+```
+
+Zugriff auf die Oberfläche:
+
+```powershell
+kubectl --context do-fra1-vsc-orchestrierung -n argocd port-forward svc/argocd-server 8080:443
+```
+
+Danach `https://localhost:8080` im Browser öffnen.

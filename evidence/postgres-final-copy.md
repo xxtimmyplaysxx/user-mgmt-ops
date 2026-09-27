@@ -1,4 +1,9 @@
-# Frischer Datenabgleich vor Managed-PG-Umschaltung
+# PostgreSQL-Migration: Datenabgleich, Umschaltung und Abbau
+
+Die Migration wurde am 27.09.2026 abgeschlossen. Der Ablauf umfasst den Datenabgleich
+um 16:17 Uhr, den Anwendungstest um 16:26 Uhr und die Entfernung der Quelle um 16:33 Uhr.
+
+## Datenabgleich
 
 Ausgefuehrt am 27.09.2026, 16:17:30-16:17:47 Uhr (Europe/Zurich), nach Wartungs-Merge
 `4f0263004d9aa1474db921b1460b09d57236ad6c` (Ops PR 2).
@@ -21,15 +26,12 @@ Das Skript `scripts/Sync-StagingPostgres.ps1` hat Folgendes live geprueft:
   stimmen ueberein. Keine Datenzeilen oder Zugangsdaten im Nachweis ausgegeben.
 - Wartungsbedingungen nach dem Vergleich erneut bestaetigt.
 - Temporaerer Migrations-Pod und seine NetworkPolicy entfernt.
-- Quell-Deployment, Service und PVC bleiben vorhanden; PVC ist Bound.
+- Quell-Deployment, Service und PVC waren zu diesem Zeitpunkt noch vorhanden; PVC Bound.
 
 Die Archive und der maschinenlesbare Report liegen ausschliesslich unter dem
-ignorierten `tmp/`. Dies belegt die aktuelle Datenkopie bei gestoppter Anwendung.
-Der Anwendungsstart gegen Managed PostgreSQL und sein E2E-Test stehen noch aus.
-
-Naechster GitOps-Schritt: `managedDatabase.enabled=true`, Backend/HPA wieder
-aktivieren, Quelle zunaechst behalten. Nach Schreibzugriffen auf das Ziel keinen
-Rueckwechsel zur alten Quelle ohne erneuten Datenabgleich vornehmen.
+ignorierten `tmp/`. Der Datenabgleich fand bei gestoppter Anwendung statt.
+Danach wurden `managedDatabase.enabled=true` gesetzt und Backend sowie HPA
+wieder aktiviert. Die Quelle blieb bis zum erfolgreichen Anwendungstest erhalten.
 
 ## Anwendung nach Umschaltung geprueft
 
@@ -67,10 +69,8 @@ Staging-PVC `user-mgmt-postgres-data`; dessen PV hat die ReclaimPolicy `Delete`.
 Der lokale Quell-Dump wurde vor Vorbereitung der Entfernung nochmals per SHA256
 gegen den erfolgreichen Restore-Report geprueft.
 
-Die Entfernung wird separat ueber `postgres.enabled=false` vorgenommen. Sie
-entfernt altes Deployment, Service, NetworkPolicy und PVC; die ReclaimPolicy gibt
-danach auch das alte Block-Volume frei. Die tatsaechliche Entfernung steht vor
-diesem separaten Merge noch aus. Managed PostgreSQL und die Backups bleiben bestehen.
+Nach diesen Pruefungen wurde die Entfernung separat ueber `postgres.enabled=false`
+vorgenommen. Managed PostgreSQL und die Backups blieben bestehen.
 
 ## Quelle und altes Volume entfernt
 
