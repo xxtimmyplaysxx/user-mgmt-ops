@@ -33,11 +33,32 @@ fuenf verbleibenden Ressourcen ohne Aenderung/Loeschung vorhandener Ressourcen.
 - MySQL 8.4: `vsc-module-mysql`, Datenbank `modules`.
 - Beide Firewalls erlauben den bestehenden Kubernetes-Cluster als Trusted Source.
 - Kontrollplan: `No changes`, Exitcode 0.
-- Lokale terraform.tfvars: `enable_databases=true` (nicht in Git).
+- Lokale terraform.tfvars: `enable_databases=true`, `node_count=2` (nicht in Git).
 - Quell-Backup mit `scripts/Backup-StagingDatabase.ps1`: Custom-Archiv, 8806 Bytes;
   `pg_restore --list` erfolgreich, SHA256 zwischen Pod und lokaler Kopie identisch.
 - Backup liegt ausschliesslich unter dem ignorierten `tmp/backups/`; keine Inhalte
-  in Git. Wiederherstellung und Datenvergleich sind noch NICHT erfolgt.
+  in Git.
+
+## Kapazitaet, Secrets und Wiederherstellung
+
+Live-Restore-Test abgeschlossen am 27.09.2026 um 15:03 Uhr (Europe/Zurich).
+
+- Eigentuemer hat capacity.tfplan angewendet: 0 added, 1 changed, 0 destroyed.
+- Beide Worker `pool-3y84frtdj-3mixuj` und `pool-3y84frtdj-3xfmor` sind Ready.
+- Kontrollplan danach: `No changes`, Exitcode 0.
+- PostgreSQL und MySQL melden ueber die DigitalOcean-API `online`.
+- Secrets `user-mgmt-managed-postgres` und `user-mgmt-module-db` in Staging erstellt.
+- Backup `user-mgmt-staging-20260927-144952.dump` in zuvor leeres Managed-PG-Schema
+  wiederhergestellt, mit `--single-transaction --no-owner --no-acl`.
+- Verbindung ueber privaten Endpunkt, `sslmode=verify-full` und DigitalOcean-CA;
+  `pg_stat_ssl` bestaetigt `t|TLSv1.3`.
+- Fuenf Tabellen/Sequenzen mit Anzahlen und aggregierten Inhalts-Fingerprints
+  verglichen: Quelle und Ziel stimmen ueberein. Keine Datensaetze ausgegeben.
+- Temporaerer Client-Pod und seine Netzwerkregel anschliessend entfernt.
+- Anwendung weiterhin an alter PostgreSQL-Datenbank. Vor der endgueltigen
+  Umschaltung Schreibzugriffe stoppen und aktuellen Datenstand erneut uebernehmen.
+- Reproduzierbare Skripte: Prepare-ManagedDatabaseSecrets.ps1,
+  Test-ManagedPostgresRestore.ps1 und database-fingerprint.sql unter scripts/.
 
 Erfolgreich lokal ausgefuehrt:
 - Java Gradle-Tests fuer Module-Client und Controller.
@@ -49,12 +70,13 @@ Erfolgreich lokal ausgefuehrt:
 
 Lesend am bestehenden Cluster festgestellt:
 - Cluster running; vorhandene Argo-CD-Anwendungen Synced/Healthy.
-- Ein Node; rund 94% der allocatable Memory belegt.
+- Vor der Kapazitaetserweiterung ein Node mit rund 94% belegtem allocatable Memory;
+  inzwischen zwei Ready-Nodes, siehe oben.
 - Zu Beginn noch keine Managed-Datenbanken vorhanden; Erstellung siehe oben.
 
 Ausstehend (NICHT als bestanden behauptet):
-- Zusaetzliche Clusterkapazitaet fuer die neuen Workloads.
-- Gepruefte Datenmigration und Umschaltung auf die erstellten Managed-Datenbanken.
+- Finaler Datenabgleich bei gestoppten Schreibzugriffen und Anwendungs-Umschaltung
+  auf die erstellten Managed-Datenbanken.
 - Monitoring-Installation, Scrape-Targets, Dashboard-Messwerte und Alert-Empfang.
 - k6-Lauf, HPA scale-out/scale-in und Verfuegbarkeit.
 - Kyverno-Admission-Ablehnung.

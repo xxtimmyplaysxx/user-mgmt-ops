@@ -9,7 +9,10 @@ ist, wurde der gespeicherte Importplan angewendet: 1 imported, 0 added, 0 change
 0 destroyed. Der anschliessende Plan endete mit Exitcode 0 und "No changes".
 Anschliessend wurden Managed PostgreSQL 16 und MySQL 8.4 angelegt; auch danach
 zeigte der Plan "No changes". Die lokale terraform.tfvars haelt nun
-enable_databases=true fest. Datenmigration und Anwendungskonfiguration stehen aus.
+enable_databases=true und node_count=2 fest. Die Erweiterung auf zwei Worker wurde
+angewendet; beide sind Ready, Kontrollplan erneut "No changes" (Exitcode 0).
+Das Staging-Backup wurde erfolgreich mit TLS und Datenvergleich wiederhergestellt.
+Die endgueltige Datenbank-Umschaltung der Anwendung steht noch aus.
 
 Der Import muss auf diesem Rechner nicht erneut ausgefuehrt werden. Die folgenden
 Schritte dokumentieren den durchgefuehrten Ablauf. Der lokale State gehoert nicht

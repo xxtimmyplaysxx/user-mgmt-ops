@@ -8,8 +8,11 @@ Eigentuemers abgeschlossen. Der bestehende Cluster wurde anschliessend erfolgrei
 in Terraform importiert: keine Ressourcen erstellt, geaendert oder geloescht;
 abschliessender Plan "No changes". Managed PostgreSQL 16 und MySQL 8.4 sowie die
 beiden Datenbanken und Firewalls sind erstellt; der erneute Plan zeigt keine
-Aenderungen. Die alte Staging-Datenbank wurde gesichert. Wiederherstellung,
-Umschaltung und Anwendungs-Rollout stehen aus.
+Aenderungen. Beide Worker sind Ready. Das Staging-Backup wurde in Managed
+PostgreSQL wiederhergestellt: TLS 1.3 mit Zertifikatspruefung, fuenf
+Tabellen/Sequenzen stimmen beim Datenvergleich ueberein. Beide DB-Secrets sind
+im Staging-Namespace vorhanden. Die Anwendung nutzt weiterhin die alte Datenbank;
+endgueltige Umschaltung und Anwendungs-Rollout stehen aus.
 
 Die Anwendung einschliesslich des vom Lehrer bereitgestellten Module Service liegt
 in https://github.com/xxtimmyplaysxx/user-mgmt-service-kubernetes unter dem
@@ -20,18 +23,18 @@ gleichnamigen Branch `codex/observability-microservices`.
 | 1 Observability | Stack-values, 2 ServiceMonitors, 3 Grafana-Dashboards, PrometheusRules, Alertmanager-Webhook | Installation, Scrape-Targets, Daten in Dashboards, zugestellter Alert |
 | 2 Lasttest | k6-Skript, Job und Netzwerkregeln | Testlauf, HPA scale-out und scale-in, Verfuegbarkeit und Diagramme |
 | 3 IaC | Provider, generierte/bereinigte Konfiguration, Variablen, Import und No-change-Plan erfolgreich | Erledigt; State lokal erhalten |
-| 4 Managed PostgreSQL | Managed DB/Firewall erstellt, Quell-Backup geprueft, Helm-Umschaltung vorbereitet | Wiederherstellen, Daten vergleichen, umstellen, alte DB/PVC entfernen |
+| 4 Managed PostgreSQL | Managed DB/Firewall/Secret erstellt, Backup wiederhergestellt, TLS und Datenvergleich erfolgreich | Schreibzugriffe stoppen, finalen Datenstand uebernehmen, umstellen, alte DB/PVC entfernen |
 | 5 Kyverno | Helm-values, 3 Enforce-Policies, ungueltiges Deployment | Installation und dokumentierte Admission-Ablehnung |
-| 6 Microservices | REST-Client mit Resilienz, Module-Service-Image, CI, Helm, Metriken, Managed MySQL erstellt | DB-Secrets, GitOps-Rollout, E2E inkl. Fehlerfaellen und Laststabilitaet |
+| 6 Microservices | REST-Client mit Resilienz, Module-Service-Image, CI, Helm, Metriken, Managed MySQL und Secret erstellt | GitOps-Rollout, E2E inkl. Fehlerfaellen und Laststabilitaet |
 
 ## Vorhandene Umgebung
 
 - Cluster: `vsc-orchestrierung`, Frankfurt, ID `7e46ab36-b79c-4dea-8301-2a2a998822c5`.
 - Staging: `user-mgmt-staging`, automatische Argo-CD-Synchronisierung von `main`.
 - Production: eigener Namespace und eigene values-prod.yaml, ebenfalls Auto-Sync.
-- Ein Worker mit 4 GB RAM, beobachtet am 27.09.: 2842 MiB / 94% des allocatable RAM.
-- Vor Monitoring/Policies zusaetzliche Kapazitaet bereitstellen; der aktuelle Node
-  hat kaum Reserve. Keine bestehende Anwendung ungeprueft entfernen.
+- Zwei Worker mit je 4 GB RAM; beide Ready nach Terraform-Skalierung am 27.09.
+- Vor der Erweiterung belegte der einzelne Worker rund 94% seines allocatable RAM.
+  Ressourcen und tatsaechlichen Verbrauch nach Installation erneut beobachten.
 
 ## Reihenfolge nach Freigabe
 
@@ -66,6 +69,27 @@ Die lokalen Receiver-Logs sind nicht dauerhaft: Nachweise nach dem Test sichern.
 CPU/Memory-Dashboard sowie separate RED-Dashboards fuer User- und Module-Service.
 
 ## Managed-Datenbank-Umschaltung
+
+Die vorbereitenden Skripte wurden am 27.09. erfolgreich ausgefuehrt:
+
+```powershell
+.\scripts\Prepare-ManagedDatabaseSecrets.ps1
+.\scripts\Test-ManagedPostgresRestore.ps1 -BackupPath '<vollstaendiger Pfad zum geprueften .dump>'
+```
+
+Das erste Skript liest Zugangsdaten ueber die DigitalOcean-API in den Speicher und
+uebertraegt sie per stdin als Secrets; es schreibt keine Passwortdatei. Das zweite
+nutzt einen temporaeren Client-Pod mit begrenztem Netzwerkzugriff und prueft TLS,
+Archiv-Pruefsumme sowie Tabellen- und Sequenz-Fingerprints. Es stellt nur in ein
+leeres public-Schema wieder her und entfernt anschliessend Pod und Netzwerkregel.
+Ein Fehler beim Restore rollt die gesamte Transaktion zurueck.
+Quelle: [PostgreSQL pg_restore](https://www.postgresql.org/docs/16/app-pgrestore.html).
+
+**Nicht nochmals auf das bereits befuellte Ziel anwenden.** Vor der endgueltigen
+Umschaltung muessen Schreibzugriffe auf die Quelle angehalten und ein frisches
+Backup mit erneutem Datenvergleich verwendet werden. Der heutige Vergleich belegt
+den Stand zum Testzeitpunkt, nicht die Synchronisation spaeterer Aenderungen.
+Lokale Reports und Backups liegen unter dem ignorierten Verzeichnis tmp/.
 
 `managedDatabase.enabled=true` laedt `user-mgmt-managed-postgres` nach dem bisherigen
 Secret. Es enthaelt `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`,
