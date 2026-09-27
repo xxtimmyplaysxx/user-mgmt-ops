@@ -79,6 +79,24 @@ auf 768Mi. Drei parallele Abrufserien der Login-Dateien erfolgreich, neuer Pod
 3/3 Ready ohne Restarts, gemessener Verbrauch 428Mi. Dashboards erneut geprueft.
 Details und Testumfang in monitoring-installation.md.
 
+## Anwendungs-Images und naechster Staging-Rollout
+
+- Application-PR 1 vom Eigentuemer gemergt; main-Commit
+  `6c932b34bb69f1d3af03ca5529b887874d9b6112`.
+- GitHub-Run 36322414461: Java/Python-Tests sowie Build/Push aller drei Images
+  erfolgreich. Alle drei SHA-Tags anonym aus GHCR abrufbar (Manifest HTTP 200).
+- Der Run insgesamt ist fehlgeschlagen: Ops-Checkout meldete Bad credentials.
+  Eine automatische Image-Promotion nach Ops-main fand daher NICHT statt.
+- Reparatur vorbereitet in Application-PR 2: repo-spezifischer SSH-Deploy-Key statt
+  ungueltigem OPS_REPO_TOKEN, explizites Checkout von Ops-main. Lesen und
+  Push-Dry-Run ueber den neuen Key erfolgreich; privater Key nur im verschluesselten
+  Actions-Secret OPS_DEPLOY_KEY. Lokale Schluesseldateien danach entfernt.
+- Die Staging-values dieses Ops-Branches aktivieren Module-Service/MySQL und zwei
+  ServiceMonitors, behalten aber lokale PostgreSQL und PVC fuer die spaetere
+  kontrollierte Migration. CPU-Limit-Quota 4 fuer HPA, Rolling Updates und k6.
+- Helm lint fuer Staging/Production sowie Render-Assertions fuer den ersten
+  Rollout und die spaetere Managed-Variante erfolgreich. Noch kein Ops-main-Merge.
+
 Erfolgreich lokal ausgefuehrt:
 - Java Gradle-Tests fuer Module-Client und Controller.
 - Python pytest: 3 Tests erfolgreich (SQLite, nicht Managed MySQL).
