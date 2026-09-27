@@ -1,8 +1,8 @@
 images:
   backend:
-    tag: 342438b0b787c8d3abd90a40f73aca53499324e4
+    tag: 122fe4821c7c0805ee63ac955c2ea41e60d1907c
   frontend:
-    tag: 342438b0b787c8d3abd90a40f73aca53499324e4
+    tag: 122fe4821c7c0805ee63ac955c2ea41e60d1907c
 replicas:
   backend: 1
   frontend: 1
@@ -31,3 +31,6 @@ quota:
   limitsMemory: 4Gi
 networkPolicy:
   enabled: true
+module:
+  image:
+    tag: 122fe4821c7c0805ee63ac955c2ea41e60d1907c
