@@ -1,8 +1,8 @@
 images:
   backend:
-    tag: 122fe4821c7c0805ee63ac955c2ea41e60d1907c
+    tag: fd1e6343585fdf92ba437e929d23cabe1f894133
   frontend:
-    tag: 122fe4821c7c0805ee63ac955c2ea41e60d1907c
+    tag: fd1e6343585fdf92ba437e929d23cabe1f894133
 replicas:
   backend: 1
   frontend: 1
@@ -32,7 +32,6 @@ quota:
   limitsMemory: 4Gi
 networkPolicy:
   enabled: true
-
 # First rollout: enable the module API and its metrics, retain the source DB/PVC.
 # Switch PostgreSQL only after a fresh backup with writes stopped and comparison.
 postgres:
@@ -43,7 +42,7 @@ managedDatabase:
 module:
   enabled: true
   image:
-    tag: 122fe4821c7c0805ee63ac955c2ea41e60d1907c
+    tag: fd1e6343585fdf92ba437e929d23cabe1f894133
   databaseCidr: 10.114.0.5/32
 monitoring:
   enabled: true
