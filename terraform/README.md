@@ -1,14 +1,26 @@
 # Bestehenden Cluster importieren
 
-Status: noch nicht ausgefuehrt. Fuer die Aufgabenstellung darf generated.tf nicht
-als angeblich generiert von Hand erfunden werden. Der Import-Block referenziert
-den real vorhandenen Cluster. enable_databases bleibt zuerst false.
+Status: generated.tf wurde am 27.09. aus dem realen Cluster erzeugt und lokal
+bereinigt. Konfliktierende deaktivierte DRA-Bloecke wurden entfernt, die vom API
+gemeldete Worker-Anzahl 1 uebernommen und Werte parametrisiert. Ein
+prevent_destroy-Lifecycle schuetzt vor geplanter Cluster-Loeschung. fmt und validate
+sind erfolgreich. Nach ausdruecklicher Bestaetigung, dass Pruefung 2 abgeschlossen
+ist, wurde der gespeicherte Importplan angewendet: 1 imported, 0 added, 0 changed,
+0 destroyed. Der anschliessende Plan endete mit Exitcode 0 und "No changes".
+enable_databases bleibt vorerst false; Datenbanken wurden noch nicht angelegt.
 
-Nach Freigabe und mit DIGITALOCEAN_TOKEN in der aktuellen Shell:
+Der Import muss auf diesem Rechner nicht erneut ausgefuehrt werden. Die folgenden
+Schritte dokumentieren den durchgefuehrten Ablauf. Der lokale State gehoert nicht
+in Git und muss fuer weitere Arbeiten erhalten bleiben.
+
+Die folgenden Befehle beschreiben die erstmalige Generierung, wenn generated.tf
+noch NICHT existiert. Dabei benoetigt der Import-Block `provider = digitalocean`.
+Sobald die Ressource existiert, steht diese Zuordnung in der Ressource.
+Mit der bereits vorhandenen Datei direkt bei `terraform fmt` weitermachen.
 
 ```powershell
 terraform init
-terraform plan -generate-config-out=generated.tf
+terraform plan "-generate-config-out=generated.tf"
 ```
 
 generated.tf analysieren: konfliktierende/default Attribute entfernen, Name,
@@ -19,7 +31,7 @@ Keine automatische Umstellung auf die neueste Kubernetes-Version vornehmen.
 ```powershell
 terraform fmt
 terraform validate
-terraform plan -out=import.tfplan
+terraform plan "-out=import.tfplan"
 ```
 
 Der erste Plan soll genau den Import enthalten, keine Loeschung/Neuerstellung
