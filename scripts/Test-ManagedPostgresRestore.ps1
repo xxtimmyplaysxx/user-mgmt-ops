@@ -1,7 +1,8 @@
 param(
     [Parameter(Mandatory = $true)][string]$BackupPath,
     [string]$Context = 'do-fra1-vsc-orchestrierung',
-    [string]$Namespace = 'user-mgmt-staging'
+    [string]$Namespace = 'user-mgmt-staging',
+    [switch]$RefreshTrialRestore
 )
 
 $ErrorActionPreference = 'Stop'
@@ -17,6 +18,17 @@ if ((Get-FileHash -LiteralPath $BackupPath -Algorithm SHA256).Hash.ToLowerInvari
     throw 'Backup checksum mismatch.'
 }
 $pg = $prepared.databases.postgres
+$targetBackup = $null
+if ($RefreshTrialRestore) {
+    $maintenance = & (Join-Path $PSScriptRoot 'Assert-StagingDatabaseMaintenance.ps1') -Context $Context -Namespace $Namespace
+    $previous = Get-Content -LiteralPath (Join-Path $opsRoot 'tmp\postgres-restore-report.json') -Raw | ConvertFrom-Json
+    if ($pg.id -ne 'ea6852c4-6c9d-4998-ae61-6f4363dc30a4' -or $pg.database -ne 'usermgmt_staging' -or
+        $maintenance.source_pod -ne $backup.source_pod -or
+        $previous.context -ne $Context -or $previous.namespace -ne $Namespace -or
+        -not $previous.restore_successful -or $previous.application_switched) {
+        throw 'Refreshing is limited to the previously verified, unused staging trial restore.'
+    }
+}
 $podName = 'vsc-db-migration'
 $labels = @{ 'app.kubernetes.io/name' = $podName }
 $policy = @{
@@ -68,7 +80,28 @@ try {
 
     $tableCount = kubectl --context $Context -n $Namespace exec $podName -- psql -X -At -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind IN ('r','p','v','m','S','f');"
     if ($LASTEXITCODE -ne 0) { throw 'Managed PostgreSQL connection/TLS test failed.' }
-    if ([string]$tableCount -ne '0') { throw 'Target public schema is not empty. Refusing to overwrite existing data.' }
+    if ([string]$tableCount -ne '0' -and -not $RefreshTrialRestore) { throw 'Target public schema is not empty. Refusing to overwrite existing data.' }
+    if ($RefreshTrialRestore) {
+        $otherClients = kubectl --context $Context -n $Namespace exec $podName -- psql -X -At -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM pg_stat_activity WHERE datname=current_database() AND backend_type='client backend' AND pid<>pg_backend_pid();"
+        if ($LASTEXITCODE -ne 0 -or ([string]$otherClients).Trim() -ne '0') { throw 'Managed target has other client connections; refusing to replace its data.' }
+        # Preserve the old trial data before replacing it, even though it is not live.
+        kubectl --context $Context -n $Namespace exec $podName -- sh -ceu 'pg_dump --format=custom --no-owner --no-acl --file=/tmp/previous-target.dump; pg_restore --list /tmp/previous-target.dump >/dev/null'
+        if ($LASTEXITCODE -ne 0) { throw 'Could not back up the previous target data.' }
+        $targetBackupName = 'managed-before-cutover-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '.dump'
+        $targetBackup = Join-Path $opsRoot "tmp\backups\$targetBackupName"
+        if (Test-Path -LiteralPath $targetBackup) { throw 'Previous target backup filename already exists.' }
+        Push-Location (Split-Path -Parent $targetBackup)
+        try {
+            kubectl --context $Context -n $Namespace cp "${podName}:/tmp/previous-target.dump" "./$targetBackupName"
+            if ($LASTEXITCODE -ne 0) { throw 'Could not download the previous target backup.' }
+        } finally { Pop-Location }
+        $targetBackupHash = kubectl --context $Context -n $Namespace exec $podName -- sha256sum /tmp/previous-target.dump
+        if ($LASTEXITCODE -ne 0 -or
+            (Get-FileHash -LiteralPath $targetBackup -Algorithm SHA256).Hash.ToLowerInvariant() -ne ($targetBackupHash -split '\s+')[0]) {
+            throw 'Previous target backup checksum mismatch.'
+        }
+        Write-Output 'Previous target data backed up locally; archive and SHA256 verified.'
+    }
     Push-Location (Split-Path -Parent (Resolve-Path -LiteralPath $BackupPath).Path)
     try {
         kubectl --context $Context -n $Namespace cp "./$(Split-Path -Leaf $BackupPath)" "${podName}:/tmp/restore.dump"
@@ -76,9 +109,16 @@ try {
     } finally { Pop-Location }
     $copiedHash = kubectl --context $Context -n $Namespace exec $podName -- sha256sum /tmp/restore.dump
     if ($LASTEXITCODE -ne 0 -or ($copiedHash -split '\s+')[0] -ne $backup.sha256) { throw 'Copied backup checksum mismatch.' }
-    # One transaction: a failure rolls back the entire restore. No DROP/clean option.
-    kubectl --context $Context -n $Namespace exec $podName -- sh -ceu 'pg_restore --dbname="$PGDATABASE" --no-owner --no-acl --exit-on-error --single-transaction /tmp/restore.dump'
-    if ($LASTEXITCODE -ne 0) { throw 'Restore failed; transaction rolled back.' }
+    # One transaction: a restore error rolls back drops and writes together.
+    if ($RefreshTrialRestore) {
+        $null = & (Join-Path $PSScriptRoot 'Assert-StagingDatabaseMaintenance.ps1') -Context $Context -Namespace $Namespace
+        $restoreOutput = @(kubectl --context $Context -n $Namespace exec $podName -- sh -ceu 'pg_restore --dbname="$PGDATABASE" --clean --if-exists --no-owner --no-acl --exit-on-error --single-transaction /tmp/restore.dump' 2>&1)
+    } else {
+        $restoreOutput = @(kubectl --context $Context -n $Namespace exec $podName -- sh -ceu 'pg_restore --dbname="$PGDATABASE" --no-owner --no-acl --exit-on-error --single-transaction /tmp/restore.dump' 2>&1)
+    }
+    # A COPY failure can include actual row contents; do not echo raw restore logs.
+    if ($LASTEXITCODE -ne 0) { throw 'Restore failed; transaction rolled back. Raw output withheld to protect database contents.' }
+    $restoreOutput = $null
 
     $sql = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'database-fingerprint.sql') -Raw
     $target = @($sql | kubectl --context $Context -n $Namespace exec -i $podName -- psql -X -qAt -v ON_ERROR_STOP=1)
@@ -88,18 +128,26 @@ try {
     $matched = ($target.Count -gt 0) -and (($source -join "`n") -ceq ($target -join "`n"))
     $tls = kubectl --context $Context -n $Namespace exec $podName -- psql -X -At -v ON_ERROR_STOP=1 -c 'SELECT ssl, version FROM pg_stat_ssl WHERE pid=pg_backend_pid();'
     if ($LASTEXITCODE -ne 0) { throw 'Could not verify TLS session.' }
+    if ($RefreshTrialRestore) {
+        $null = & (Join-Path $PSScriptRoot 'Assert-StagingDatabaseMaintenance.ps1') -Context $Context -Namespace $Namespace
+    }
     $report = [ordered]@{
         checked_at = (Get-Date).ToString('o'); context = $Context; namespace = $Namespace
         backup_sha256 = $backup.sha256; restore_successful = $true
         tls = [string]$tls; sslmode = 'verify-full'; fingerprints_match_current_source = $matched
         checked_objects = $target.Count; application_switched = $false
+        maintenance_verified = [bool]$RefreshTrialRestore; previous_target_backup = $targetBackup
     }
     $report | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $opsRoot 'tmp\postgres-restore-report.json') -Encoding utf8
     $backup.restore_tested = $true
     $backup | ConvertTo-Json | Set-Content -LiteralPath $metadataPath -Encoding utf8
     Write-Output "Restore completed over TLS ($tls). Compared $($target.Count) tables/sequences; current source matches: $matched."
     if (-not $matched) { throw 'Restore succeeded, but source/target differ. Source may have changed since backup. Do not switch the application.' }
-    Write-Output 'Application still uses the old database. Final cutover requires a write freeze and a fresh backup/data comparison.'
+    if ($RefreshTrialRestore) {
+        Write-Output 'Final data copy verified. Keep maintenance enabled until the reviewed managed-database cutover is merged.'
+    } else {
+        Write-Output 'Application still uses the old database. Final cutover requires a write freeze and a fresh backup/data comparison.'
+    }
 } finally {
     if ($createdPod) { kubectl --context $Context -n $Namespace delete pod $podName --wait=false }
     if ($createdPolicy) { kubectl --context $Context -n $Namespace delete networkpolicy $podName --wait=false }
