@@ -37,3 +37,19 @@ kubectl --context do-fra1-vsc-orchestrierung -n monitoring logs deploy/alert-rec
 
 Die Receiver-Logs sind ohne persistentes Log-Backend fluechtig; dieser Auszug haelt
 die beobachtete Zustellung fest.
+
+## Entwarnung nach dem Managed-PG-Start
+
+Nach dem erfolgreichen Backend-Start endete der Alarm um 16:25:17 Uhr.
+Der Receiver hat auch die `resolved`-Benachrichtigung empfangen:
+
+```json
+{
+  "received_at": "2026-09-27T14:25:42.108466855Z",
+  "status": "resolved",
+  "starts_at": "2026-09-27T14:18:32.039Z",
+  "ends_at": "2026-09-27T14:25:17.039Z"
+}
+```
+
+Damit sind Ausloesung, Zustellung und Entwarnung fuer denselben Alarm live belegt.

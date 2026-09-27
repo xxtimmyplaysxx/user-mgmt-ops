@@ -30,3 +30,44 @@ Der Anwendungsstart gegen Managed PostgreSQL und sein E2E-Test stehen noch aus.
 Naechster GitOps-Schritt: `managedDatabase.enabled=true`, Backend/HPA wieder
 aktivieren, Quelle zunaechst behalten. Nach Schreibzugriffen auf das Ziel keinen
 Rueckwechsel zur alten Quelle ohne erneuten Datenabgleich vornehmen.
+
+## Anwendung nach Umschaltung geprueft
+
+Ops PR 3 wurde als `8ba0fd07b2affd68c536e901f855d8fc609d819d` gemergt.
+Nach der Synchronisierung wurde das Backend Ready; Staging und Production melden
+Synced/Healthy. Image: `fd1e6343585fdf92ba437e929d23cabe1f894133`.
+
+Am 27.09.2026 um 16:26 Uhr wurde mit dem neuen, ausschliesslich lesenden
+`scripts/Test-ManagedPostgresConnection.ps1` die reale Managed-Datenbank geprueft:
+
+```json
+{"database":"usermgmt_staging","client_tls":"TLSv1.3","jdbc_connections":10,"all_jdbc_tls":true,"jdbc_tls_versions":["TLSv1.3"]}
+```
+
+Das Backend verwendet das Managed-Secret als letzte envFrom-Quelle und mountet die
+CA. Die konfigurierte URL nutzt `sslmode=verify-full`. Die SQL-Abfrage verbindet
+`pg_stat_activity` mit `pg_stat_ssl` und bestaetigt die Verschluesselung der echten
+JDBC-Sessions. Der temporaere Pruef-Client und seine Netzwerkregel wurden entfernt.
+
+Der erneute Live-E2E-Lauf um 16:26-16:27 Uhr bestand Registrierung und Anmeldung
+zweier Testbenutzer sowie alle sechs HTTP-Faelle:
+
+```text
+PASS assignment: HTTP 204
+PASS idempotent repeat: HTTP 204
+PASS missing module: HTTP 404
+PASS invalid module ID: HTTP 400
+PASS unauthenticated: HTTP 403
+PASS another user's assignment: HTTP 403
+```
+
+Prometheus-Targets fuer Backend und Module-Service sind wieder up. Die Quelle hat
+keine anderen Client-Verbindungen. Nur der alte PostgreSQL-Pod verwendet den
+Staging-PVC `user-mgmt-postgres-data`; dessen PV hat die ReclaimPolicy `Delete`.
+Der lokale Quell-Dump wurde vor Vorbereitung der Entfernung nochmals per SHA256
+gegen den erfolgreichen Restore-Report geprueft.
+
+Die Entfernung wird separat ueber `postgres.enabled=false` vorgenommen. Sie
+entfernt altes Deployment, Service, NetworkPolicy und PVC; die ReclaimPolicy gibt
+danach auch das alte Block-Volume frei. Die tatsaechliche Entfernung steht vor
+diesem separaten Merge noch aus. Managed PostgreSQL und die Backups bleiben bestehen.

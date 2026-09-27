@@ -11,6 +11,12 @@ Siehe [finaler Datenabgleich](postgres-final-copy.md).
 16:18:42 Uhr: Der waehrend der geplanten Wartung ausgeloeste Verfuegbarkeitsalarm
 wurde vom Alertmanager-Webhook empfangen. [Zustellnachweis](alert-delivery.md).
 
+16:26-16:27 Uhr: Backend mit Managed PostgreSQL Ready; zehn echte JDBC-Verbindungen
+mit TLS 1.3 nachgewiesen. Registrierung/Anmeldung und alle sechs Live-E2E-Faelle
+erneut erfolgreich. Beide Anwendungen Synced/Healthy, Anwendungs-Targets up.
+Entwarnung bereits um 16:25:42 beim Webhook empfangen. Quelle ohne App-Verbindungen;
+Entfernung der alten Staging-DB/PVC ist als separater Schritt vorbereitet.
+
 ## Aufgabe 3: Import nach Freigabe erfolgreich
 
 Der Eigentuemer hat bestaetigt, dass Pruefung 2 abgeschlossen ist. generated.tf
@@ -137,15 +143,13 @@ Lesend am bestehenden Cluster festgestellt:
 - Zu Beginn noch keine Managed-Datenbanken vorhanden; Erstellung siehe oben.
 
 Ausstehend (NICHT als bestanden behauptet):
-- Anwendungs-Umschaltung auf Managed PostgreSQL und Quell-DB/PVC-Entfernung.
-  Der finale Datenabgleich bei gestoppten Schreibzugriffen ist bestanden.
-- RED-Dashboard-Pruefung und Alarmaufloesung nach Wartung. Anwendungs-Scrape-Targets,
-  Request-Counter, Duration-Histogramme und tatsaechlicher Alarmempfang sind nachgewiesen.
+- Quell-DB/PVC-Entfernung. Finaler Datenabgleich und Managed-PG-Umschaltung bestanden.
+- RED-Dashboard-Pruefung. Anwendungs-Scrape-Targets, Request-Counter,
+  Duration-Histogramme, Alarmempfang und Entwarnung sind nachgewiesen.
 - k6-Lauf, HPA scale-out/scale-in und Verfuegbarkeit.
 - Kyverno-Admission-Ablehnung.
-- Live-Ausfalltests und erneuter E2E-Lauf nach PostgreSQL-Umschaltung.
-  Fehlerstatus-Korrektur, kompletter Live-E2E, TLS zu Managed MySQL und der
-  GitOps-Rollout sind nachgewiesen.
+- Live-Ausfalltests zum Module-Service. Kompletter E2E nach PostgreSQL-Umschaltung,
+  TLS zu beiden Managed-Datenbanken und der GitOps-Rollout sind nachgewiesen.
 
 Nachweise mit Uhrzeit und Commit-SHA ergaenzen. Keine Tokens, Passwoerter,
 JWTs, State-Dateien oder Datenbankinhalte in diese Dokumentation kopieren.
