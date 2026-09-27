@@ -10,6 +10,11 @@ die abschliessende Bewertung und muendliche Abnahme erfolgen durch die Lehrperso
 
 Die folgende Chronologie behaelt auch fruehere, inzwischen erledigte Zwischenstaende.
 
+Abschlusskontrolle 17:55 Uhr: Terraform-Plan `No changes` (Exitcode 0), alle sechs
+Live-E2E-Faelle nach der Statistikwartung erneut bestanden, Backend-HPA wieder bei
+einer Replik und alle vier Kyverno-Deployments Ready. Git verfolgt keine State-,
+Plan-, Dump-, tfvars-, .env- oder privaten Schluesseldateien in diesem Ops-Repository.
+
 16:17 Uhr: Nach Wartungs-Merge Ops PR 2 wurde der aktuelle Quellstand neu
 gesichert und in Managed PostgreSQL wiederhergestellt. Alle fuenf geprueften
 Objekte stimmen ueberein, TLS 1.3/verify-full. Beide Archive sind lokal gesichert.
