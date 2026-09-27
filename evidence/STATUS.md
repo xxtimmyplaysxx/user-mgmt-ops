@@ -97,6 +97,12 @@ Details und Testumfang in monitoring-installation.md.
 - Helm lint fuer Staging/Production sowie Render-Assertions fuer den ersten
   Rollout und die spaetere Managed-Variante erfolgreich. Noch kein Ops-main-Merge.
 
+Nachtrag: Application-PR 2 wurde vom Eigentuemer gemergt. Der main-Run
+[36323051668](https://github.com/xxtimmyplaysxx/user-mgmt-service-kubernetes/actions/runs/36323051668)
+fuer `122fe4821c7c0805ee63ac955c2ea41e60d1907c` ist vollstaendig erfolgreich
+(1m50s), einschliesslich SSH-Checkout, Image-Promotion und Push nach Ops-main.
+Der neue repo-spezifische Deploy-Key ist damit auch im echten CI-Lauf verifiziert.
+
 Erfolgreich lokal ausgefuehrt:
 - Java Gradle-Tests fuer Module-Client und Controller.
 - Python pytest: 3 Tests erfolgreich (SQLite, nicht Managed MySQL).

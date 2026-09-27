@@ -15,8 +15,10 @@ im Staging-Namespace vorhanden. Die Anwendung nutzt weiterhin die alte Datenbank
 endgueltige Umschaltung und Anwendungs-Rollout stehen aus.
 
 Die Anwendung einschliesslich des vom Lehrer bereitgestellten Module Service liegt
-in https://github.com/xxtimmyplaysxx/user-mgmt-service-kubernetes unter dem
-gleichnamigen Branch `codex/observability-microservices`.
+in https://github.com/xxtimmyplaysxx/user-mgmt-service-kubernetes auf `main`.
+Die Staging-values dieses Ops-Branches aktivieren zunaechst den Module-Service
+mit Managed MySQL und die Anwendungsmetriken. Die alte PostgreSQL bleibt fuer den
+abschliessenden Datenabgleich und die kontrollierte Umschaltung erhalten.
 
 | Aufgabe | Vorbereitet | Noch praktisch nachzuweisen |
 |---|---|---|
@@ -109,6 +111,10 @@ Backend hat nur PostgreSQL-Egress und HTTP zum Module-Service, keinen MySQL-Egre
 
 Umschaltung in values-staging.yaml erst wenn Datenbanken, Secrets und Images bereit
 sind: `managedDatabase.enabled=true`, `module.enabled=true`, `monitoring.enabled=true`.
+Beim ersten Start gegen Managed PostgreSQL bleibt `postgres.enabled=true`, damit
+die Quell-Datenbank mit ihrem Volume fuer einen kontrollierten Rueckweg erhalten
+bleibt. Nach finalem Backup bei gestoppten Schreibzugriffen, Datenvergleich und
+erfolgreicher Anwendungspruefung wird die Quelle separat entfernt.
 `postgres.enabled=false` entfernt Deployment, Service und PVC aus dem Chart.
 **Argo CD prune kann dann Datenvolumes loeschen: erst Backup und Migration pruefen.**
 Production wird separat migriert; gemeinsame Templates bleiben standardmaessig
