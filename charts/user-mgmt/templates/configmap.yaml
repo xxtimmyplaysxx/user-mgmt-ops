@@ -5,6 +5,7 @@ metadata:
   labels:
     {{- include "user-mgmt.labels" . | nindent 4 }}
 data:
+  MODULE_SERVICE_BASE_URL: "http://{{ include "user-mgmt.fullname" . }}-module:8080"
   POSTGRES_DB: {{ .Values.config.postgresDatabase | quote }}
   POSTGRES_USER: {{ .Values.config.postgresUsername | quote }}
   SPRING_DATASOURCE_URL: {{ .Values.config.datasourceUrl | quote }}

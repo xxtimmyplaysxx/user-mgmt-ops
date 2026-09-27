@@ -1,0 +1,137 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vsc-infrastructure
+  namespace: monitoring
+  labels:
+    grafana_dashboard: '1'
+data:
+  vsc-infrastructure.json: |
+    {
+      "uid": "vsc-infrastructure",
+      "title": "VSC - Kubernetes CPU, Memory and HPA",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "10s",
+      "time": {
+        "from": "now-30m",
+        "to": "now"
+      },
+      "tags": [
+        "VSC"
+      ],
+      "panels": [
+        {
+          "id": 1,
+          "type": "timeseries",
+          "title": "CPU per pod",
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum by (namespace,pod) (rate(container_cpu_usage_seconds_total{namespace=~\"user-mgmt.*\",container!=\"\",container!=\"POD\"}[2m]))",
+              "legendFormat": "{{pod}} {{route}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "cores"
+            },
+            "overrides": []
+          }
+        },
+        {
+          "id": 2,
+          "type": "timeseries",
+          "title": "Memory per pod",
+          "gridPos": {
+            "x": 12,
+            "y": 0,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum by (namespace,pod) (container_memory_working_set_bytes{namespace=~\"user-mgmt.*\",container!=\"\",container!=\"POD\"})",
+              "legendFormat": "{{pod}} {{route}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes"
+            },
+            "overrides": []
+          }
+        },
+        {
+          "id": 3,
+          "type": "timeseries",
+          "title": "Available backend replicas",
+          "gridPos": {
+            "x": 0,
+            "y": 8,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "kube_deployment_status_replicas_available{namespace=\"user-mgmt-staging\",deployment=\"user-mgmt-backend\"}",
+              "legendFormat": "{{pod}} {{route}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short"
+            },
+            "overrides": []
+          }
+        },
+        {
+          "id": 4,
+          "type": "timeseries",
+          "title": "HPA desired replicas",
+          "gridPos": {
+            "x": 12,
+            "y": 8,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "kube_horizontalpodautoscaler_status_desired_replicas{namespace=\"user-mgmt-staging\"}",
+              "legendFormat": "{{pod}} {{route}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short"
+            },
+            "overrides": []
+          }
+        }
+      ]
+    }

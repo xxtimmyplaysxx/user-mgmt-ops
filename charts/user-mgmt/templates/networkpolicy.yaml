@@ -71,6 +71,12 @@ spec:
       ports:
         - { protocol: TCP, port: {{ .Values.service.backendPort }} }
   egress:
+    {{- if .Values.managedDatabase.enabled }}
+    - to:
+        - ipBlock:
+            cidr: {{ required "managedDatabase.cidr is required" .Values.managedDatabase.cidr | quote }}
+      ports: [{ protocol: TCP, port: 25060 }]
+    {{- else }}
     - to:
         - podSelector:
             matchLabels:
@@ -78,6 +84,16 @@ spec:
               app.kubernetes.io/component: postgres
       ports:
         - { protocol: TCP, port: {{ .Values.service.postgresPort }} }
+    {{- end }}
+    {{- if .Values.module.enabled }}
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "user-mgmt.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: module
+      ports: [{ protocol: TCP, port: 8080 }]
+    {{- end }}
+{{- if .Values.postgres.enabled }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -97,4 +113,49 @@ spec:
               app.kubernetes.io/component: backend
       ports:
         - { protocol: TCP, port: {{ .Values.service.postgresPort }} }
+{{- end }}
+{{- if .Values.monitoring.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "user-mgmt.fullname" . }}-allow-metrics
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app.kubernetes.io/component
+        operator: In
+        values: [backend, module]
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels: { kubernetes.io/metadata.name: monitoring }
+      ports: [{ protocol: TCP, port: 8080 }]
+{{- end }}
+{{- if .Values.module.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "user-mgmt.fullname" . }}-module
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "user-mgmt.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: module
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "user-mgmt.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: backend
+      ports: [{ protocol: TCP, port: 8080 }]
+  egress:
+    - to:
+        - ipBlock:
+            cidr: {{ required "module.databaseCidr is required" .Values.module.databaseCidr | quote }}
+      ports: [{ protocol: TCP, port: 25060 }]
+{{- end }}
 {{- end }}

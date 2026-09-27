@@ -1,0 +1,58 @@
+# Course environment: one replica, 24h retention. Not a production HA setup.
+grafana:
+  defaultDashboardsEnabled: true
+  service:
+    type: ClusterIP
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits: { cpu: 300m, memory: 256Mi }
+  sidecar:
+    dashboards:
+      enabled: true
+      searchNamespace: monitoring
+prometheus:
+  prometheusSpec:
+    retention: 24h
+    scrapeInterval: 15s
+    evaluationInterval: 15s
+    serviceMonitorSelector:
+      matchLabels: { release: monitoring }
+    serviceMonitorNamespaceSelector: {}
+    ruleSelector:
+      matchLabels: { release: monitoring }
+    ruleNamespaceSelector: {}
+    resources:
+      requests: { cpu: 100m, memory: 384Mi }
+      limits: { cpu: 600m, memory: 768Mi }
+alertmanager:
+  config:
+    global:
+      resolve_timeout: 2m
+    route:
+      receiver: course-webhook
+      group_by: [alertname, namespace]
+      group_wait: 10s
+      group_interval: 30s
+      repeat_interval: 1h
+      routes:
+        - matchers: ['alertname="Watchdog"']
+          receiver: 'null'
+    receivers:
+      - name: 'null'
+      - name: course-webhook
+        webhook_configs:
+          - url: http://alert-receiver.monitoring.svc:8080/alerts
+            send_resolved: true
+  alertmanagerSpec:
+    resources:
+      requests: { cpu: 10m, memory: 32Mi }
+      limits: { cpu: 100m, memory: 128Mi }
+prometheusOperator:
+  resources:
+    requests: { cpu: 25m, memory: 64Mi }
+    limits: { cpu: 200m, memory: 256Mi }
+# DOKS manages these control-plane endpoints and does not expose them for scraping.
+kubeControllerManager: { enabled: false }
+kubeScheduler: { enabled: false }
+kubeEtcd: { enabled: false }
+kubeProxy: { enabled: false }

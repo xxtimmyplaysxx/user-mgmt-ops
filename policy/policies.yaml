@@ -1,0 +1,74 @@
+# Rules apply only to course application namespaces explicitly labelled vsc-policies=enforce.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: vsc-require-resources
+spec:
+  background: true
+  rules:
+    - name: requests-and-limits
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              namespaceSelector:
+                matchLabels: { vsc-policies: enforce }
+      validate:
+        failureAction: Enforce
+        message: CPU and memory requests and limits are mandatory.
+        pattern:
+          spec:
+            containers:
+              - name: '*'
+                resources:
+                  requests: { cpu: '?*', memory: '?*' }
+                  limits: { cpu: '?*', memory: '?*' }
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: vsc-require-nonroot
+spec:
+  background: true
+  rules:
+    - name: nonroot
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              namespaceSelector:
+                matchLabels: { vsc-policies: enforce }
+      validate:
+        failureAction: Enforce
+        message: Application pods must explicitly run as non-root.
+        pattern:
+          spec:
+            securityContext:
+              runAsNonRoot: true
+            containers:
+              - name: '*'
+                securityContext:
+                  allowPrivilegeEscalation: false
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: vsc-require-versioned-images
+spec:
+  background: true
+  rules:
+    - name: explicit-version
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              namespaceSelector:
+                matchLabels: { vsc-policies: enforce }
+      validate:
+        failureAction: Enforce
+        message: Images must have an explicit version and must not use latest.
+        pattern:
+          spec:
+            containers:
+              - name: '*'
+                image: '*:* & !*:latest'

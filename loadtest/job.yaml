@@ -1,0 +1,66 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: user-mgmt-loadtest
+  namespace: user-mgmt-staging
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels: { app: k6-loadtest }
+    spec:
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: k6
+          image: grafana/k6:1.2.3
+          args: [run, /scripts/test.js]
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: [ALL] }
+          env:
+            - { name: BASE_URL, value: 'http://user-mgmt-backend:8080' }
+          envFrom:
+            - secretRef: { name: loadtest-credentials }
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 256Mi }
+          volumeMounts:
+            - { name: scripts, mountPath: /scripts, readOnly: true }
+      volumes:
+        - name: scripts
+          configMap: { name: user-mgmt-loadtest }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-k6-egress
+  namespace: user-mgmt-staging
+spec:
+  podSelector:
+    matchLabels: { app: k6-loadtest }
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - podSelector:
+            matchLabels: { app.kubernetes.io/component: backend }
+      ports: [{ protocol: TCP, port: 8080 }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-k6-ingress
+  namespace: user-mgmt-staging
+spec:
+  podSelector:
+    matchLabels: { app.kubernetes.io/component: backend }
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels: { app: k6-loadtest }
+      ports: [{ protocol: TCP, port: 8080 }]

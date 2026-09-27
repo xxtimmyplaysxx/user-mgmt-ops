@@ -1,0 +1,54 @@
+{{- if .Values.monitoring.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "user-mgmt.fullname" . }}-backend
+  labels: { release: {{ .Values.monitoring.release | quote }} }
+spec:
+  selector:
+    matchLabels:
+      {{- include "user-mgmt.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: backend
+  endpoints:
+    - port: http
+      path: /actuator/prometheus
+      interval: 15s
+{{- if .Values.module.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "user-mgmt.fullname" . }}-module
+  labels: { release: {{ .Values.monitoring.release | quote }} }
+spec:
+  selector:
+    matchLabels:
+      {{- include "user-mgmt.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: module
+  endpoints:
+    - { port: http, path: /metrics, interval: 15s }
+{{- end }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "user-mgmt.fullname" . }}-alerts
+  labels: { release: {{ .Values.monitoring.release | quote }} }
+spec:
+  groups:
+    - name: user-mgmt
+      rules:
+        - alert: UserMgmtHighErrorRate
+          expr: sum(rate(http_server_requests_seconds_count{namespace={{ .Release.Namespace | quote }},status=~"5..",uri!~"/actuator.*"}[2m])) / clamp_min(sum(rate(http_server_requests_seconds_count{namespace={{ .Release.Namespace | quote }},uri!~"/actuator.*"}[2m])), 0.001) > 0.05
+          for: 1m
+          labels: { severity: warning, service: user-mgmt }
+          annotations:
+            summary: "Mehr als 5 Prozent Serverfehler im User Service"
+            description: "Modul-Abhaengigkeit, Datenbank und Backend-Logs pruefen."
+        - alert: UserMgmtUnavailable
+          expr: kube_deployment_status_replicas_available{namespace={{ .Release.Namespace | quote }},deployment="{{ include "user-mgmt.fullname" . }}-backend"} < 1
+          for: 1m
+          labels: { severity: critical, service: user-mgmt }
+          annotations:
+            summary: "Keine verfuegbare User-Service-Replica"
+{{- end }}
